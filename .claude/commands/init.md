@@ -38,7 +38,21 @@ Read the following (in parallel where possible):
 - External services (look for client files, API wrappers)
 - Test framework and linter
 
-### 2. Ask targeted questions
+### 2. Hunt for gotchas
+
+While reading the code, actively look for non-obvious traps:
+- Memoized methods that go stale after writes
+- Methods that behave differently for certain record types
+- Test setup requirements not in the README (local services, seeds, env vars)
+- Places where the codebase diverges from framework conventions
+- Any `# TODO`, `# FIXME`, `# HACK`, `# WARNING` comments
+- Any `raise NotImplementedError` or `raise "do not use"` markers
+- Any method named `legacy_`, `old_`, `deprecated_`
+- Git log: `git log --oneline -20` — recent commits reveal active work and known issues
+
+These become the "Things that will bite you" section — the most valuable part of the CLAUDE.md.
+
+### 3. Ask targeted questions
 
 After investigating, ask only what you couldn't determine from the code:
 

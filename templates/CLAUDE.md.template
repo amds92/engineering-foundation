@@ -82,3 +82,14 @@ spec/             ← mirrors app/ structure
 |---------|---------|----------|
 | [e.g. Stripe] | [Payments] | [app/clients/stripe_client.rb] |
 | [e.g. SendGrid] | [Email] | [app/mailers/ + app/clients/sendgrid_client.rb] |
+
+## Things that will bite you
+
+The non-obvious gotchas that aren't in the code. Inspired by how Anthropic documents their own projects.
+
+- [e.g. "The `User#full_name` method returns nil for OAuth users — always use `User#display_name`"]
+- [e.g. "Sidekiq jobs run in a separate process — ActiveRecord objects passed as arguments get stale, always pass IDs"]
+- [e.g. "The test suite requires Redis running locally — `redis-server` before `rspec`"]
+- [e.g. "`Order#total` is memoized — call `order.reload` after any payment update or you get stale data"]
+- [e.g. "Elasticsearch index is not auto-updated in test env — call `refresh_index!` after creating records in specs"]
+- [e.g. "The `staging` branch auto-deploys to staging — never merge experimental work there without a feature flag"]
