@@ -1,142 +1,84 @@
 # [Project Name]
 
-> One-line description of what this project does.
-
----
-
-## Project Context
-
-**Type:** [API / Frontend / Full-stack / CLI / Library / Service]
-**Stage:** [Greenfield / Active development / Maintenance]
-**Team size:** [Solo / Small (2-5) / Medium (5-15)]
-
----
+[One sentence: what this project does and for whom.]
 
 ## Stack
 
-**Language:** [Ruby 3.2 / Python 3.11 / TypeScript 5 / PHP 8.2 / Go 1.22 / etc.]
-**Framework:** [Rails 7 / Django / Next.js / Laravel / Gin / etc.]
-**Database:** [PostgreSQL / MySQL / MongoDB / Redis / Elasticsearch / etc.]
-**Background jobs:** [Sidekiq / Celery / BullMQ / etc. — or "none"]
-**Testing:** [RSpec / pytest / Jest / PHPUnit / etc.]
-**Linter:** [RuboCop / Ruff / ESLint / PHPCS / etc.]
-**CI:** [GitHub Actions / CircleCI / etc.]
-**Deployment:** [Kamal / Heroku / Fly.io / AWS / etc.]
+- **Language:** [e.g. Ruby 3.3 / Python 3.12 / TypeScript 5.4 / PHP 8.3]
+- **Framework:** [e.g. Rails 8.1 / Django 5 / Next.js 14 / Laravel 11]
+- **Database:** [e.g. PostgreSQL 16 / MySQL 8 / MongoDB 7]
+- **Jobs:** [e.g. Sidekiq / Celery / BullMQ — or "none"]
+- **Cache:** [e.g. Redis / Memcached — or "none"]
+- **Tests:** [e.g. RSpec / pytest / Jest / PHPUnit]
+- **Lint:** [e.g. RuboCop / Ruff / ESLint / PHPCS]
+- **CI:** [e.g. GitHub Actions]
+- **Deploy:** [e.g. Kamal / Fly.io / Heroku / AWS]
 
----
-
-## Architecture
-
-**Pattern:** [MVC / Service Objects / Clean Architecture / Hexagonal / etc.]
-
-**Key directories:**
-```
-[describe your structure — e.g.]
-app/
-  controllers/   ← thin, only HTTP concerns
-  services/      ← business logic lives here
-  models/        ← ActiveRecord, no business logic
-  jobs/          ← background jobs
-lib/             ← reusable utilities
-spec/            ← tests mirror app/ structure
-```
-
-**Core principles for this project:**
-- [e.g. "Controllers must be thin — all business logic goes in services"]
-- [e.g. "No raw SQL — use query objects in app/queries/"]
-- [e.g. "Every service returns a Result object with success? and failure?"]
-- [e.g. "All external API calls go through app/clients/"]
-
----
-
-## Services & Integrations
-
-List every external service this project connects to:
-
-| Service | Purpose | How it's used |
-|---------|---------|---------------|
-| [e.g. Stripe] | [Payments] | [app/clients/stripe_client.rb] |
-| [e.g. SendGrid] | [Email] | [app/mailers/] |
-| [e.g. Elasticsearch] | [Search] | [app/services/search/] |
-
----
-
-## Development Commands
+## Commands
 
 ```sh
 # Install dependencies
-[e.g. bundle install / pip install -r requirements.txt / npm install]
+[e.g. bundle install]
 
-# Start development server
-[e.g. rails s / python manage.py runserver / npm run dev]
+# Start server
+[e.g. rails s]
 
-# Run tests
-[e.g. bundle exec rspec / pytest / npm test]
+# Run all tests
+[e.g. bundle exec rspec]
+
+# Run single test file
+[e.g. bundle exec rspec spec/services/create_user_spec.rb]
 
 # Run linter
-[e.g. bundle exec rubocop / ruff check . / npm run lint]
+[e.g. bundle exec rubocop]
 
-# Run a single test file
-[e.g. bundle exec rspec spec/services/create_user_spec.rb]
+# Run linter with autofix
+[e.g. bundle exec rubocop -a]
 ```
 
----
+## Structure
 
-## Git Flow
+Only document what's non-obvious. Skip standard conventions.
 
-**Main branch:** `main`
-**Branch naming:** `feat/`, `fix/`, `chore/`, `refactor/`, `docs/`
-**Commit style:** Conventional Commits (`feat:`, `fix:`, `chore:`, `refactor:`, `docs:`)
-**Merge strategy:** Rebase + squash before merge, `--no-ff` on merge to main
-**PR size:** Small and single-purpose. One PR = one concern.
+```
+[e.g.]
+app/services/     ← all business logic, always use service objects
+app/clients/      ← all external API calls, nowhere else
+app/queries/      ← complex ActiveRecord queries
+app/jobs/         ← background jobs, must be idempotent
+spec/             ← mirrors app/ structure
+```
 
----
+## Architecture rules
 
-## Code Standards
-
-**What I care about most:**
-- [e.g. "No duplication — always check if something exists before creating it"]
-- [e.g. "Tests are not optional — every public method has a spec"]
-- [e.g. "Naming must be explicit — no abbreviations except well-known ones"]
-- [e.g. "Service objects for anything with more than 2 steps of business logic"]
+- [e.g. "Controllers are thin — delegate all logic to services"]
+- [e.g. "Services return a Result object with success? and failure?"]
+- [e.g. "Never call external APIs inline — always use app/clients/"]
 - [e.g. "Background jobs for anything that takes > 500ms"]
 
-**What NOT to do:**
-- [e.g. "Never put business logic in controllers"]
-- [e.g. "Never call external APIs synchronously in a request cycle"]
-- [e.g. "Never use raw strings for error messages — use I18n"]
+## Non-obvious project rules
 
----
+- [e.g. "All monetary values stored in pence/cents — never floats"]
+- [e.g. "Soft deletes everywhere — never hard-delete records"]
+- [e.g. "All dates stored in UTC, converted at display time"]
+- [e.g. "Feature flags via Flipper — ship incomplete work behind flags"]
 
-## Testing Standards
+## Git flow
 
-- Tests live in `[spec/ / tests/ / __tests__/]`
-- Test files mirror source structure
-- Each test file covers one class/module
-- No real database calls in unit tests — use doubles/mocks
-- Integration tests can hit the database
-- Every bug fix includes a regression test
+- Branches: `feat/`, `fix/`, `chore/`, `refactor/`, `docs/`
+- Commits: Conventional Commits (`feat:`, `fix:`, `chore:`, etc.)
+- PRs: small and single-purpose, one concern per PR
+- Never push directly to `main`
 
----
+## IMPORTANT — read before touching anything
 
-## Current State
+- [e.g. "DO NOT touch LegacyPaymentService — full rewrite in progress on feat/payments-v2"]
+- [e.g. "DO NOT change the User model without migrating the audit log"]
+- [e.g. "Check app/services/ before creating anything new — avoid duplication"]
 
-**What's working well:**
-- [e.g. "Authentication is solid"]
-- [e.g. "Payment flow is well tested"]
+## External services
 
-**Known issues / tech debt:**
-- [e.g. "The search service is slow — needs Elasticsearch migration (tracked in #123)"]
-- [e.g. "UserController is too fat — needs refactoring"]
-
-**Active work:**
-- [e.g. "v2 API in progress on feat/api-v2 branch"]
-
----
-
-## Important context for Claude
-
-- [Any project-specific quirks, gotchas, or decisions that aren't obvious from the code]
-- [e.g. "We use soft deletes everywhere — never hard delete records"]
-- [e.g. "The legacy PaymentService must not be touched — rewrite in progress"]
-- [e.g. "All monetary values are stored in pence/cents — never floats"]
+| Service | Purpose | Location |
+|---------|---------|----------|
+| [e.g. Stripe] | [Payments] | [app/clients/stripe_client.rb] |
+| [e.g. SendGrid] | [Email] | [app/mailers/ + app/clients/sendgrid_client.rb] |
