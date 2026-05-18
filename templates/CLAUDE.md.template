@@ -1,0 +1,142 @@
+# [Project Name]
+
+> One-line description of what this project does.
+
+---
+
+## Project Context
+
+**Type:** [API / Frontend / Full-stack / CLI / Library / Service]
+**Stage:** [Greenfield / Active development / Maintenance]
+**Team size:** [Solo / Small (2-5) / Medium (5-15)]
+
+---
+
+## Stack
+
+**Language:** [Ruby 3.2 / Python 3.11 / TypeScript 5 / PHP 8.2 / Go 1.22 / etc.]
+**Framework:** [Rails 7 / Django / Next.js / Laravel / Gin / etc.]
+**Database:** [PostgreSQL / MySQL / MongoDB / Redis / Elasticsearch / etc.]
+**Background jobs:** [Sidekiq / Celery / BullMQ / etc. — or "none"]
+**Testing:** [RSpec / pytest / Jest / PHPUnit / etc.]
+**Linter:** [RuboCop / Ruff / ESLint / PHPCS / etc.]
+**CI:** [GitHub Actions / CircleCI / etc.]
+**Deployment:** [Kamal / Heroku / Fly.io / AWS / etc.]
+
+---
+
+## Architecture
+
+**Pattern:** [MVC / Service Objects / Clean Architecture / Hexagonal / etc.]
+
+**Key directories:**
+```
+[describe your structure — e.g.]
+app/
+  controllers/   ← thin, only HTTP concerns
+  services/      ← business logic lives here
+  models/        ← ActiveRecord, no business logic
+  jobs/          ← background jobs
+lib/             ← reusable utilities
+spec/            ← tests mirror app/ structure
+```
+
+**Core principles for this project:**
+- [e.g. "Controllers must be thin — all business logic goes in services"]
+- [e.g. "No raw SQL — use query objects in app/queries/"]
+- [e.g. "Every service returns a Result object with success? and failure?"]
+- [e.g. "All external API calls go through app/clients/"]
+
+---
+
+## Services & Integrations
+
+List every external service this project connects to:
+
+| Service | Purpose | How it's used |
+|---------|---------|---------------|
+| [e.g. Stripe] | [Payments] | [app/clients/stripe_client.rb] |
+| [e.g. SendGrid] | [Email] | [app/mailers/] |
+| [e.g. Elasticsearch] | [Search] | [app/services/search/] |
+
+---
+
+## Development Commands
+
+```sh
+# Install dependencies
+[e.g. bundle install / pip install -r requirements.txt / npm install]
+
+# Start development server
+[e.g. rails s / python manage.py runserver / npm run dev]
+
+# Run tests
+[e.g. bundle exec rspec / pytest / npm test]
+
+# Run linter
+[e.g. bundle exec rubocop / ruff check . / npm run lint]
+
+# Run a single test file
+[e.g. bundle exec rspec spec/services/create_user_spec.rb]
+```
+
+---
+
+## Git Flow
+
+**Main branch:** `main`
+**Branch naming:** `feat/`, `fix/`, `chore/`, `refactor/`, `docs/`
+**Commit style:** Conventional Commits (`feat:`, `fix:`, `chore:`, `refactor:`, `docs:`)
+**Merge strategy:** Rebase + squash before merge, `--no-ff` on merge to main
+**PR size:** Small and single-purpose. One PR = one concern.
+
+---
+
+## Code Standards
+
+**What I care about most:**
+- [e.g. "No duplication — always check if something exists before creating it"]
+- [e.g. "Tests are not optional — every public method has a spec"]
+- [e.g. "Naming must be explicit — no abbreviations except well-known ones"]
+- [e.g. "Service objects for anything with more than 2 steps of business logic"]
+- [e.g. "Background jobs for anything that takes > 500ms"]
+
+**What NOT to do:**
+- [e.g. "Never put business logic in controllers"]
+- [e.g. "Never call external APIs synchronously in a request cycle"]
+- [e.g. "Never use raw strings for error messages — use I18n"]
+
+---
+
+## Testing Standards
+
+- Tests live in `[spec/ / tests/ / __tests__/]`
+- Test files mirror source structure
+- Each test file covers one class/module
+- No real database calls in unit tests — use doubles/mocks
+- Integration tests can hit the database
+- Every bug fix includes a regression test
+
+---
+
+## Current State
+
+**What's working well:**
+- [e.g. "Authentication is solid"]
+- [e.g. "Payment flow is well tested"]
+
+**Known issues / tech debt:**
+- [e.g. "The search service is slow — needs Elasticsearch migration (tracked in #123)"]
+- [e.g. "UserController is too fat — needs refactoring"]
+
+**Active work:**
+- [e.g. "v2 API in progress on feat/api-v2 branch"]
+
+---
+
+## Important context for Claude
+
+- [Any project-specific quirks, gotchas, or decisions that aren't obvious from the code]
+- [e.g. "We use soft deletes everywhere — never hard delete records"]
+- [e.g. "The legacy PaymentService must not be touched — rewrite in progress"]
+- [e.g. "All monetary values are stored in pence/cents — never floats"]
