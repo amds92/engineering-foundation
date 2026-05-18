@@ -2,7 +2,9 @@
 
 > A language-agnostic engineering operating system for serious developers.
 
-Stop reinventing your workflow on every project. This foundation gives you a proven, opinionated development system that works whether you're building a Rails API, a Python service, a PHP backend, or an Ember frontend.
+Stop reinventing your workflow on every project. This foundation gives you a proven, opinionated development system that works whether you're building a Rails API, a Python service, a PHP backend, or an Ember frontend — with Claude Code as a senior engineer on every project.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---
 
@@ -15,8 +17,9 @@ Inspired by how the best engineering teams work:
 - **37signals** — PRs are culture transmission, nitpicking is rigor not pedantry
 - **GitHub** — small PRs, single-purpose, CI on every push
 - **Addy Osmani** — AI as a workflow enforcer, not just a code generator
+- **Anthropic** — CLAUDE.md under 200 lines, specific over vague, gotchas documented
 
-**The core belief:** Claude without context is a junior. Claude with context is a senior. This foundation gives Claude everything it needs to think and act like a senior engineer on your project.
+**The core belief:** Claude without context is a junior. Claude with context is a senior. This foundation gives Claude everything it needs to think and act like a senior engineer on your specific project.
 
 ---
 
@@ -25,98 +28,76 @@ Inspired by how the best engineering teams work:
 Every task follows the same flow, regardless of language or stack:
 
 ```
-/task    →    /plan    →    /branch    →    develop    →    /commit    →    /review    →    /pr    →    /ci    →    /ship
+/init → /task → /plan → /branch → develop → /commit → /review → /pr → /ci → /ship
 ```
 
 | Phase | Command | What happens |
 |-------|---------|-------------|
-| **Define** | `/task` | Receive task, load project context, clarify scope, prepare to work |
+| **Setup** | `/init` | Investigate project, generate CLAUDE.md + rules automatically |
+| **Define** | `/task` | Load context, clarify scope, prepare to work |
 | **Plan** | `/plan` | Architecture decisions before writing a single line |
 | **Build** | `/branch` | Create correctly named branch |
 | **Build** | `/commit` | Semantic commit with verification |
 | **Review** | `/review` | Senior-level code review before PR |
 | **Ship** | `/pr` | Create PR with real description |
 | **Ship** | `/ci` | Verify CI is green |
-| **Ship** | `/ship` | Full merge flow when everything passes |
+| **Ship** | `/ship` | Full gate: review + CI + merge |
 
 ---
 
 ## Quick Start
 
-### 1. Copy to your project
+### New project
 
 ```sh
-# Copy CLAUDE.md template to your project root
-cp templates/CLAUDE.md.template /path/to/your-project/CLAUDE.md
-
-# Copy slash commands
-cp -r .claude/commands /path/to/your-project/.claude/commands
-```
-
-### 2. Fill in your project context
-
-Edit `CLAUDE.md` in your project root. This is the most important step — it gives Claude the context it needs to behave like a senior engineer on your specific project.
-
-### 3. Start working
-
-Open Claude Code in your project directory and use the commands:
-
-```sh
-cd your-project
-claude
-
-# Start a task
-/task Fix the authentication bug where tokens expire too early
-
-# Plan before coding
-/plan
-
-# Create your branch
-/branch
-
-# After writing code, review it
-/review
-
-# Create a PR
-/pr
-
-# Full ship when ready
-/ship
-```
-
----
-
-## Installation
-
-### Requirements
-
-- [Claude Code](https://claude.ai/code) — the Claude CLI
-- [GitHub CLI](https://cli.github.com/) — for CI and PR commands (`gh auth login`)
-- Git
-
-### Per-project setup
-
-```sh
-# 1. Clone this repo somewhere on your machine
+# 1. Clone this foundation
 git clone git@github.com:amds92/engineering-foundation.git ~/engineering-foundation
 
-# 2. In any new project, copy the foundation
-cp ~/engineering-foundation/templates/CLAUDE.md.template ./CLAUDE.md
-cp -r ~/engineering-foundation/.claude ./claude
+# 2. In your new project, copy the commands
+mkdir -p your-project/.claude
+cp -r ~/engineering-foundation/.claude/commands your-project/.claude/commands
 
-# 3. Edit CLAUDE.md with your project specifics
-# (See templates/CLAUDE.md.template for what to fill in)
-
-# 4. Done. Open Claude Code and start working.
+# 3. Open Claude Code and let /init do the work
+cd your-project
 claude
+/init
 ```
+
+### Existing project
+
+```sh
+# 1. Copy the commands into your project
+cp -r ~/engineering-foundation/.claude/commands your-project/.claude/commands
+
+# 2. Open Claude Code and run /init — it investigates your codebase
+cd your-project
+claude
+/init
+```
+
+`/init` reads your project, detects the stack, hunts for gotchas, and generates a production-ready `CLAUDE.md` in under a minute. No manual configuration.
 
 ---
 
 ## Slash Commands Reference
 
+### `/init`
+**Start here.** Investigates your project and generates `CLAUDE.md` + path-scoped rule files automatically.
+
+- Detects stack, framework, database, CI, deployment
+- Reads existing patterns and conventions from the code
+- Hunts for non-obvious gotchas (stale memoization, test setup requirements, deprecated code paths)
+- Generates `.claude/rules/` files scoped to specific directories
+- Presents everything for review before writing
+
+```
+/init
+```
+
+---
+
 ### `/task [description]`
-Start a new task. Loads project context, clarifies scope, and prepares Claude to work as a senior engineer on this specific task.
+Entry point for any piece of work. Loads project context, clarifies scope, and prepares Claude to work as a senior engineer on this specific task. Never start coding without running this first.
 
 ```
 /task Implement pagination for the users endpoint
@@ -124,66 +105,211 @@ Start a new task. Loads project context, clarifies scope, and prepares Claude to
 /task Add Elasticsearch integration for product search
 ```
 
+---
+
 ### `/plan`
-Before writing code — define the architecture. What files change, what patterns to follow, what to avoid. Prevents the most expensive mistakes.
+Architecture before code. Identifies the right abstraction (service, job, cron, client, concern), checks for existing code to avoid duplication, defines what will change and what tests will be written. Presents a plan for confirmation before writing anything.
+
+```
+/plan
+```
+
+---
 
 ### `/branch`
-Create a correctly named branch based on the current task.
-- `feat/` — new functionality
-- `fix/` — bug fixes
-- `chore/` — maintenance, deps, config
-- `refactor/` — code improvements without behaviour change
-- `docs/` — documentation only
+Creates a correctly named branch from an up-to-date `main`.
+
+| Type | When |
+|------|------|
+| `feat/` | New functionality |
+| `fix/` | Bug fixes |
+| `chore/` | Maintenance, deps, config |
+| `refactor/` | Code improvement, no behaviour change |
+| `docs/` | Documentation only |
+| `perf/` | Performance improvements |
+
+```
+/branch
+```
+
+---
 
 ### `/commit`
-Create a semantic commit. Verifies no code duplication, checks conventions, writes a meaningful message.
+Semantic commit following [Conventional Commits](https://www.conventionalcommits.org). Checks for debug code, secrets, and unrelated changes before committing.
+
+```
+/commit
+```
+
+**Output format:**
+```
+feat(users): add cursor-based pagination
+
+Replaces offset pagination which broke with large datasets.
+Closes #312
+```
+
+---
 
 ### `/review`
-Senior-level code review of all changes since branching. Checks architecture, patterns, duplication, test coverage, edge cases. Groups findings by severity.
+Senior-level code review of everything changed since branching. Checks architecture, separation of concerns, duplication, test coverage, security, and performance. Groups findings by severity.
+
+```
+/review
+```
+
+**Output:**
+```
+--- CRITICAL (must fix before merge) ---
+--- CONCERN (should fix) ---
+--- NITPICK (optional) ---
+--- VERDICT: APPROVED / NEEDS CHANGES ---
+```
+
+---
 
 ### `/pr`
-Create a PR with a real description — what changed, why, how to test, screenshots if relevant.
+Creates a PR with a real description. Runs linter and tests first — never opens a PR with failures.
+
+```
+/pr
+```
+
+**PR structure:**
+```markdown
+## What
+## Why
+## How
+## Testing
+## Checklist
+```
+
+---
 
 ### `/ci`
-Check GitHub Actions CI status for the current branch. Shows pass/fail per job and exact error lines if failing.
+Checks GitHub Actions CI status for the current branch. Shows per-job status and exact error lines if failing.
+
+```
+/ci
+```
+
+**Output:**
+```
+Branch: feat/user-pagination
+Status: ✅ GREEN
+
+Jobs:
+  ✅ test (Ruby 3.2) — 45s
+  ✅ lint (RuboCop)  — 12s
+```
+
+---
 
 ### `/ship`
-Full ship flow: review → CI check → merge to main → delete branch. Only executes if everything passes.
+Full gate before merging. Review + CI must both pass or it aborts with a clear reason.
+
+```
+/ship
+```
+
+**Output:**
+```
+=== REVIEW ===   ✅ No critical issues
+=== CI ===       ✅ All jobs green
+=== RESULT ===   ✅ Merged feat/user-pagination → main
+```
+
+---
+
+## CLAUDE.md
+
+The `CLAUDE.md` file is what turns Claude from a generic assistant into a senior engineer who knows your project. Generated by `/init`, refined by you.
+
+**Key principles (from Anthropic's own practices):**
+- Under 150 lines — every line must answer "would removing this cause Claude to make mistakes?"
+- Specific over vague — `bundle exec rspec` not "run the tests"
+- No standard conventions — don't explain what Rails is
+- Always include a **"Things that will bite you"** section — the non-obvious gotchas
+
+See [`templates/CLAUDE.md.template`](templates/CLAUDE.md.template) for the full template.
+
+---
+
+## Path-scoped Rules
+
+For larger projects, use `.claude/rules/` to keep CLAUDE.md short. Rule files only load when Claude edits matching files — keeping the context window clean.
+
+```
+.claude/
+└── rules/
+    ├── testing.md      # loads when editing spec/**/*
+    ├── api.md          # loads when editing controllers
+    └── security.md     # loads when editing auth/payment code
+```
+
+See [`templates/rules-examples/`](templates/rules-examples/) for examples.
 
 ---
 
 ## Guides
 
-- [Git Flow](guides/git-flow.md) — branches, commits, rebasing, merging
-- [Architecture Principles](guides/architecture.md) — language-agnostic design decisions
-- [Code Review](guides/code-review.md) — how to give and receive reviews
-- [PR Culture](guides/pr-culture.md) — what makes a great PR
+| Guide | What it covers |
+|-------|---------------|
+| [Git Flow](guides/git-flow.md) | Branches, commits, rebasing, merging |
+| [Architecture](guides/architecture.md) | Language-agnostic design decisions |
+| [Code Review](guides/code-review.md) | How to give and receive reviews |
+| [PR Culture](guides/pr-culture.md) | What makes a great PR |
 
 ---
 
-## Adapting to your stack
+## Requirements
 
-This foundation is language-agnostic. When you fill in `CLAUDE.md` for your project, you define:
+- [Claude Code](https://claude.ai/code)
+- [GitHub CLI](https://cli.github.com/) — `gh auth login` once
+- Git
 
-- The language and framework
-- The testing tool (`rspec`, `pytest`, `jest`, `phpunit`, etc.)
-- The linter (`rubocop`, `eslint`, `phpcs`, etc.)
-- The CI tool
-- Architecture patterns to follow
-- What services exist and how they connect
+---
 
-Claude adapts its behaviour automatically based on this context.
+## Repository structure
+
+```
+engineering-foundation/
+├── .claude/
+│   └── commands/          ← 9 slash commands
+│       ├── init.md
+│       ├── task.md
+│       ├── plan.md
+│       ├── branch.md
+│       ├── commit.md
+│       ├── review.md
+│       ├── pr.md
+│       ├── ci.md
+│       └── ship.md
+├── guides/                ← engineering principles
+│   ├── architecture.md
+│   ├── code-review.md
+│   ├── git-flow.md
+│   └── pr-culture.md
+├── templates/             ← copy these to your project
+│   ├── CLAUDE.md.template
+│   ├── PR_TEMPLATE.md
+│   └── rules-examples/
+│       ├── testing.md
+│       ├── api.md
+│       └── security.md
+└── CLAUDE.md              ← context for this repo itself
+```
 
 ---
 
 ## Contributing
 
-This foundation improves when it's used. If you find something that doesn't work, open a PR.
+This foundation improves when it's used. If something doesn't work, open a PR.
 
-- Branch naming: `feat/`, `fix/`, `docs/`
 - Follow the same workflow this repo documents
 - Update the relevant guide if behaviour changes
+- Add real gotchas to the template when you discover them in the wild
 
 ---
 
-Built by [André Silva](https://github.com/amds92) · Inspired by Thoughtbot, 37signals, Shopify, and Addy Osmani's agent-skills.
+Built by [André Silva](https://github.com/amds92) · Inspired by Thoughtbot, 37signals, Shopify, Addy Osmani, and Anthropic's own engineering practices.
