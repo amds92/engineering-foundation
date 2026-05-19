@@ -231,6 +231,30 @@ grep -q "settings.local.json" .gitignore || echo ".claude/settings.local.json" >
 grep -q "mcp-calls.log" .gitignore || echo ".claude/mcp-calls.log" >> .gitignore
 ```
 
+### 9. Commit and push
+
+After writing all files, commit and push immediately — the project should never be in a state where the environment is set up locally but not on GitHub.
+
+```sh
+git add CLAUDE.md .claude/ specs/ .gitignore
+git commit -m "chore: add Claude Code engineering environment
+
+- CLAUDE.md with stack, commands, rules, and gotchas
+- .claude/rules/ scoped to spec/ and app/
+- .claude/settings.json with shared permissions
+- .claude/output-styles/writing.md for consistent output
+- .claude/hooks/pre-push.sh for automated quality gates
+- specs/feature.md.template for feature contracts"
+git push
+```
+
+If there is no remote configured yet, say so clearly:
+```
+⚠️  No remote configured. Run:
+    git remote add origin <your-repo-url>
+    git push -u origin main
+```
+
 End with:
 ```
 ✅ CLAUDE.md ([N] lines)
@@ -242,6 +266,7 @@ End with:
 ✅ CLAUDE.local.md (gitignored)
 ✅ specs/feature.md.template
 ✅ .gitignore updated
+✅ Committed and pushed to main
 
 Claude is now ready to work as a senior engineer on this project.
 Run /task to start your first task.
