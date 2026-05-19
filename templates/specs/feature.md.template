@@ -1,0 +1,49 @@
+# Feature: [Name]
+
+> One sentence: what this does and why it exists.
+
+## Problem
+
+What breaks or is missing without this feature? Be specific — no vague "improve UX" statements.
+
+## Solution
+
+What are we building? Describe the behaviour, not the implementation.
+
+## Acceptance criteria
+
+- [ ] [Specific, testable condition 1]
+- [ ] [Specific, testable condition 2]
+- [ ] [Specific, testable condition 3]
+
+Each criterion must be verifiable — "user can do X" not "system handles X well".
+
+## Out of scope
+
+What are we explicitly NOT doing in this feature?
+
+- [Thing that might seem related but isn't included]
+- [Edge case deferred to a future iteration]
+
+## Technical notes
+
+Constraints, gotchas, or decisions made before coding starts.
+
+- [e.g. "Use the existing PaymentService — do not create a new one"]
+- [e.g. "Must work for both User and AdminUser models"]
+- [e.g. "No database migrations — use existing columns"]
+
+## Open questions
+
+Questions that must be answered before or during implementation.
+
+- [ ] [Question 1 — who answers this?]
+- [ ] [Question 2]
+
+## Definition of done
+
+- [ ] Acceptance criteria all pass
+- [ ] Tests written and green
+- [ ] No new RuboCop / ESLint offenses
+- [ ] PR reviewed and approved
+- [ ] Deployed to staging and smoke tested

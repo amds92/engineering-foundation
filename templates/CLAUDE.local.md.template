@@ -1,0 +1,30 @@
+# Local overrides — DO NOT COMMIT
+
+This file is gitignored. Use it for personal preferences that shouldn't affect the team.
+
+## My preferred commands
+
+```sh
+# If you use a different test runner locally
+# bundle exec rspec --format documentation
+
+# If you have a local alias
+# alias dc='docker-compose'
+```
+
+## Personal style preferences
+
+- When explaining code, keep it brief — I prefer reading code over explanations
+- When unsure between two approaches, ask me before implementing
+- Always show the git command before running it
+
+## Local environment notes
+
+- My local Redis runs on port 6380 (not 6379)
+- I use rbenv, Ruby 3.3.x — never suggest rvm
+- Docker Desktop must be running before any docker commands
+
+## Areas I'm currently working on
+
+- [e.g. "I'm refactoring the payment flow — don't suggest changes there"]
+- [e.g. "I'm learning the background job system — explain job patterns when relevant"]

@@ -33,7 +33,7 @@ Every task follows the same flow, regardless of language or stack:
 
 | Phase | Command | What happens |
 |-------|---------|-------------|
-| **Setup** | `/init` | Investigate project, generate CLAUDE.md + rules automatically |
+| **Setup** | `/init` | Investigate project, generate full Claude Code environment |
 | **Define** | `/task` | Load context, clarify scope, prepare to work |
 | **Plan** | `/plan` | Architecture decisions before writing a single line |
 | **Build** | `/branch` | Create correctly named branch |
@@ -75,19 +75,60 @@ claude
 /init
 ```
 
-`/init` reads your project, detects the stack, hunts for gotchas, and generates a production-ready `CLAUDE.md` in under a minute. No manual configuration.
+`/init` reads your project, detects the stack, hunts for gotchas, and generates a complete Claude Code environment in under a minute. No manual configuration.
+
+---
+
+## What `/init` generates
+
+```
+your-project/
+├── CLAUDE.md                        ← project rules, auto-generated
+├── CLAUDE.local.md                  ← your personal overrides (gitignored)
+├── .gitignore                       ← updated with Claude-specific entries
+└── .claude/
+    ├── settings.json                ← shared permissions for the team
+    ├── settings.local.json          ← your personal permissions (gitignored)
+    ├── output-styles/
+    │   └── writing.md               ← Claude's tone and format, permanently
+    ├── hooks/
+    │   ├── pre-push.sh              ← lint + tests before every push
+    │   └── on-mcp-call.sh           ← audit/gate MCP tool calls
+    └── rules/
+        ├── testing.md               ← loads when editing spec files
+        ├── api.md                   ← loads when editing controllers
+        └── security.md              ← loads when editing auth/payment code
+```
+
+Plus `specs/feature.md.template` — a contract template for every feature.
+
+---
+
+## The "Quiet Files" — what most people miss
+
+Everyone talks about CLAUDE.md. Few people use the files that make Claude behave correctly *automatically*:
+
+| File | Purpose |
+|------|---------|
+| `CLAUDE.local.md` | Personal overrides — gitignored, never affects the team |
+| `.claude/settings.json` | Shared permissions committed to the repo |
+| `.claude/settings.local.json` | Your personal permissions — gitignored |
+| `.claude/output-styles/writing.md` | Defines Claude's tone permanently — no more "be shorter" |
+| `.claude/hooks/pre-push.sh` | Deterministic: runs every time before a push |
+| `.claude/hooks/on-mcp-call.sh` | Fires on every MCP tool call — log, audit, or block |
+| `.claude/rules/` | Path-scoped rules — loads only when editing matching files |
 
 ---
 
 ## Slash Commands Reference
 
 ### `/init`
-**Start here.** Investigates your project and generates `CLAUDE.md` + path-scoped rule files automatically.
+**Start here.** Investigates your project and generates a complete Claude Code environment automatically.
 
 - Detects stack, framework, database, CI, deployment
 - Reads existing patterns and conventions from the code
 - Hunts for non-obvious gotchas (stale memoization, test setup requirements, deprecated code paths)
-- Generates `.claude/rules/` files scoped to specific directories
+- Generates `CLAUDE.md`, `.claude/rules/`, `settings.json`, `output-styles/writing.md`, hooks, and `CLAUDE.local.md`
 - Presents everything for review before writing
 
 ```
@@ -251,6 +292,36 @@ See [`templates/rules-examples/`](templates/rules-examples/) for examples.
 
 ---
 
+## Hooks
+
+Hooks run deterministically — not by asking Claude, but by the harness itself.
+
+```
+.claude/hooks/
+├── pre-push.sh       # lint + tests before every push, auto-detects stack
+└── on-mcp-call.sh    # fires on every MCP tool call — log, audit, or block
+```
+
+See [`templates/hooks/`](templates/hooks/) for ready-to-use scripts.
+
+---
+
+## Output Style
+
+Put this once in `.claude/output-styles/writing.md` and never type "be more concise" again. Defines Claude's tone, response format, and what to skip — permanently, for the whole project.
+
+See [`templates/output-styles/writing.md`](templates/output-styles/writing.md).
+
+---
+
+## Feature Specs
+
+Before writing a single line of code, fill in `specs/feature.md.template`. It's the contract between what you want and what gets built — acceptance criteria, out-of-scope decisions, open questions, definition of done.
+
+See [`templates/specs/feature.md.template`](templates/specs/feature.md.template).
+
+---
+
 ## Guides
 
 | Guide | What it covers |
@@ -292,7 +363,17 @@ engineering-foundation/
 │   └── pr-culture.md
 ├── templates/             ← copy these to your project
 │   ├── CLAUDE.md.template
+│   ├── CLAUDE.local.md.template
 │   ├── PR_TEMPLATE.md
+│   ├── settings.json.template
+│   ├── settings.local.json.template
+│   ├── hooks/
+│   │   ├── pre-push.sh
+│   │   └── on-mcp-call.sh
+│   ├── output-styles/
+│   │   └── writing.md
+│   ├── specs/
+│   │   └── feature.md.template
 │   └── rules-examples/
 │       ├── testing.md
 │       ├── api.md

@@ -1,12 +1,12 @@
 # Init
 
-Investigate the project and generate a production-ready CLAUDE.md + rule files. Smarter than the built-in /init.
+Investigate the project and generate a production-ready Claude Code environment. Covers CLAUDE.md, rules, hooks, settings, output style, and spec template.
 
 ## When to use
 
 - Starting to work on an existing project for the first time
 - Onboarding Claude Code onto a project that has no CLAUDE.md
-- Refreshing an outdated CLAUDE.md after major architectural changes
+- Refreshing an outdated setup after major architectural changes
 
 ## Steps
 
@@ -63,7 +63,7 @@ After investigating, ask only what you couldn't determine from the code:
 
 Do not ask what you can already read from the code.
 
-### 3. Generate CLAUDE.md
+### 4. Generate CLAUDE.md
 
 **Rules for the generated file:**
 - Under 150 lines — every line must pass the test: "would removing this cause Claude to make mistakes?"
@@ -120,9 +120,14 @@ Do not ask what you can already read from the code.
 ## IMPORTANT
 - [Critical constraint — e.g. "Do NOT touch LegacyPaymentService — rewrite in progress"]
 - [Critical constraint — e.g. "Always check existing services before creating new ones"]
+
+## Things that will bite you
+- [Non-obvious gotcha found in the code — e.g. "User#full_name returns nil for OAuth users"]
+- [Test environment quirk — e.g. "Redis must be running before rspec"]
+- [Stale memoization trap — e.g. "Order#total is memoized — call reload after payment updates"]
 ```
 
-### 4. Generate .claude/rules/ files
+### 5. Generate .claude/rules/ files
 
 For larger concerns, generate path-scoped rule files instead of bloating CLAUDE.md:
 
@@ -146,27 +151,97 @@ paths:
 - Every service object needs a spec that covers success and failure paths
 ```
 
-### 5. Present for review before writing
+### 6. Generate supporting environment files
 
-Show the generated CLAUDE.md and list the rule files that will be created.
+These files make Claude Code behave correctly without the developer having to ask.
+
+**`.claude/settings.json`** — shared permissions, committed to the repo:
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status)", "Bash(git diff*)", "Bash(git log*)",
+      "Bash(git add*)", "Bash(git commit*)", "Bash(git push*)",
+      "Bash(git pull*)", "Bash(git checkout*)", "Bash(git branch*)",
+      "Bash(git merge*)", "Bash(git rebase*)", "Bash(git fetch*)",
+      "Bash(gh run list*)", "Bash(gh run view*)",
+      "Bash(gh pr create*)", "Bash(gh pr view*)",
+      "Bash(ls*)", "Bash(find*)", "Bash(grep*)"
+    ]
+  }
+}
+```
+Add the project's own test/lint commands (e.g. `"Bash(bundle exec*)"` for Ruby).
+
+**`.claude/output-styles/writing.md`** — eliminates "be more concise" prompts forever:
+```markdown
+# Writing style
+- Direct and technical — no filler phrases
+- Code first, explanation after (if needed at all)
+- Short by default — expand only when complexity demands it
+- Never explain Git, Rails, REST, or other basics
+- Never end with "Let me know if you need anything else"
+```
+
+**`.claude/hooks/pre-push.sh`** — auto-detect stack and run lint + tests before every push:
+Generate a script that detects the language (Gemfile → Ruby/RuboCop/RSpec, package.json → Node/ESLint/Jest, etc.) and runs the appropriate checks. Make it executable (`chmod +x`).
+
+**`CLAUDE.local.md`** — personal overrides, gitignored. Generate a stub:
+```markdown
+# Local overrides — DO NOT COMMIT
+## My preferences
+- [personal preference 1]
+## Local environment notes
+- [local env quirk]
+```
+Add `CLAUDE.local.md` to `.gitignore` if not already there.
+
+**`specs/feature.md.template`** — contract template for features before coding starts.
+
+### 7. Present for review before writing
+
+Show everything that will be created:
+
+```
+Files to create:
+  CLAUDE.md                          (N lines)
+  .claude/rules/testing.md
+  .claude/rules/api.md
+  .claude/settings.json
+  .claude/output-styles/writing.md
+  .claude/hooks/pre-push.sh
+  CLAUDE.local.md                    (gitignored)
+  specs/feature.md.template
+```
 
 Ask: "Does this look accurate? Anything to add or remove before I write the files?"
 
 Only write files after confirmation.
 
-### 6. Write the files
+### 8. Write the files
+
+Create all files. Then:
 
 ```sh
-# Create CLAUDE.md
-# Create .claude/rules/ files
-# Show what was created
+chmod +x .claude/hooks/pre-push.sh
+
+# Add CLAUDE.local.md to .gitignore if missing
+grep -q "CLAUDE.local.md" .gitignore || echo "CLAUDE.local.md" >> .gitignore
+grep -q "settings.local.json" .gitignore || echo ".claude/settings.local.json" >> .gitignore
+grep -q "mcp-calls.log" .gitignore || echo ".claude/mcp-calls.log" >> .gitignore
 ```
 
 End with:
 ```
-✅ CLAUDE.md generated ([N] lines)
+✅ CLAUDE.md ([N] lines)
 ✅ .claude/rules/testing.md
 ✅ .claude/rules/api.md
+✅ .claude/settings.json
+✅ .claude/output-styles/writing.md
+✅ .claude/hooks/pre-push.sh
+✅ CLAUDE.local.md (gitignored)
+✅ specs/feature.md.template
+✅ .gitignore updated
 
 Claude is now ready to work as a senior engineer on this project.
 Run /task to start your first task.
