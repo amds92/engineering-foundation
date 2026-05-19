@@ -1,47 +1,59 @@
 # Engineering Foundation
 
-This is a language-agnostic engineering operating system for serious developers.
+A language-agnostic engineering operating system for Claude Code.
 
 ## What this repo is
 
 A collection of:
-- **Slash commands** — workflow automation for Claude Code
-- **Guides** — engineering principles based on Thoughtbot, 37signals, Shopify, and GitHub practices
-- **Templates** — CLAUDE.md template, PR template
+- **Slash commands** (`.claude/commands/`) — 9 workflow commands for Claude Code
+- **Templates** (`templates/`) — CLAUDE.md, hooks, settings, output-styles, specs, rules
+- **Guides** (`guides/`) — engineering principles based on Thoughtbot, 37signals, Shopify, and Anthropic
 
-## How to use it in a new project
+## Commands
+
+No install needed. No build step.
 
 ```sh
-# Copy the CLAUDE.md template to your project
-cp templates/CLAUDE.md.template /path/to/project/CLAUDE.md
+# Check structure
+ls .claude/commands/
+ls templates/
 
-# Copy the slash commands
-cp -r .claude/commands /path/to/project/.claude/commands
-
-# Edit CLAUDE.md with your project specifics
+# Push (uses amds92 SSH alias)
+git push
 ```
 
-## Slash commands
+## Structure
 
-| Command | Phase | What it does |
-|---------|-------|-------------|
-| `/task` | Define | Load context, clarify scope, prepare to work |
-| `/plan` | Plan | Architecture before code |
-| `/branch` | Build | Create correctly named branch |
-| `/commit` | Build | Semantic commit with verification |
-| `/review` | Review | Senior-level code review |
-| `/pr` | Ship | Create PR with real description |
-| `/ci` | Ship | Check GitHub Actions status |
-| `/ship` | Ship | Full gate: review + CI + merge |
+```
+.claude/commands/     ← 9 slash commands: init, task, plan, branch, commit, review, pr, ci, ship
+templates/            ← copy these into target projects
+  CLAUDE.md.template
+  CLAUDE.local.md.template
+  settings.json.template
+  settings.local.json.template
+  hooks/pre-push.sh
+  hooks/on-mcp-call.sh
+  output-styles/writing.md
+  specs/feature.md.template
+  rules-examples/
+guides/               ← git-flow, architecture, code-review, pr-culture
+```
 
-## The most important file
+## Rules
 
-`templates/CLAUDE.md.template` — this is what you fill in for each project.
+- All commands are language-agnostic — no Rails/Ruby assumptions unless in examples
+- Templates use placeholder syntax `[like this]` — never real values
+- `/init` is the entry point — it generates the full environment, not just CLAUDE.md
 
-The more context you give Claude in CLAUDE.md, the better it performs. A well-filled CLAUDE.md turns Claude into a senior engineer who knows your codebase. An empty one gives you a generic assistant.
+## Git flow
+
+- Branch: `feat/`, `fix/`, `chore/`, `docs/`
+- Commits: Conventional Commits
+- Remote: `git@github-amds92:amds92/engineering-foundation.git`
+- Never push directly to main without testing the commands first
 
 ## Requirements
 
-- Claude Code CLI
+- Claude Code
 - GitHub CLI (`gh auth login`)
 - Git
