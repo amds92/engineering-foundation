@@ -1,61 +1,148 @@
 # Task
 
-Load context and prepare to work on a task like a senior engineer.
+Full development cycle for a single task. Reads context, plans, branches, implements, commits, reviews, and opens a PR — stopping only when a human decision is needed.
 
-## What this does
+## Usage
 
-This is the entry point for any piece of work. It ensures Claude understands the project deeply before writing a single line of code. A Claude that starts coding without context is a junior. This command makes it a senior.
+```
+/task Implement deployment frequency endpoint
+/task Fix JWT token expiry bug
+/task Add RSpec and configure testing infrastructure
+```
 
 ## Steps
 
-### 1. Load project context
-Read `CLAUDE.md` in the project root. If it doesn't exist, stop and say:
-> "No CLAUDE.md found. Copy the template from engineering-foundation and fill it in before starting work. Run: `cp ~/engineering-foundation/templates/CLAUDE.md.template ./CLAUDE.md`"
+### 1. Load context
+
+Read `CLAUDE.md` before anything else. If it doesn't exist, stop and say:
+> "No CLAUDE.md found. Run /init first."
+
+Also read `CLAUDE.local.md` and any relevant `.claude/rules/` files.
 
 ### 2. Understand the task
-The task description is provided as the argument to this command (e.g. `/task Fix pagination bug in users endpoint`).
 
-If the task is vague or ambiguous, ask clarifying questions before proceeding:
-- What is the expected behaviour?
-- What is the current (broken) behaviour?
-- Is there a ticket, issue, or spec to reference?
-- Any constraints (performance, backwards compatibility, deadlines)?
+Restate what you understood in one sentence. If ambiguous, ask one focused question — not five. If clear, proceed immediately.
 
-Do not assume. Ask once, clearly.
+### 3. Plan
 
-### 3. Explore relevant code
-Based on the task, read the relevant files:
-- The files most likely to change
-- Related tests
-- Any service, model, or controller touched by this task
-- Check for existing similar patterns — never duplicate logic that already exists
+Before writing a single line of code, check:
 
-### 4. Define the plan (brief)
-Before creating a branch, state clearly:
-- What files will change
-- What pattern will be followed (service object, concern, background job, etc.)
-- What tests will be written
-- Any risks or unknowns
+- What needs to be created or changed (models, services, controllers, specs)
+- Whether similar code already exists — never duplicate
+- The right abstraction (service object, query, concern, job, client)
 
-### 5. Create the branch
-Run `/branch` automatically with a name derived from the task.
-
-## Output
-
-End with a clear summary:
+Present the plan and wait for confirmation:
 
 ```
-Task: [task title]
-Branch: [branch name]
-Files to change: [list]
-Pattern: [what architecture pattern]
-Tests: [what will be tested]
-Ready to code.
+## Plan: [task name]
+
+**What:** [one sentence]
+
+**Files to create:**
+- app/services/foo_service.rb
+- spec/services/foo_service_spec.rb
+
+**Files to change:**
+- config/routes.rb
+- app/controllers/api/v1/foo_controller.rb
+
+**Tests:**
+- FooService: success path, failure path, edge case X
+- Request spec: GET /api/v1/foo → 200 with correct shape
+
+Proceed?
 ```
 
-## Rules
+### 4. Create branch
 
-- Never start coding without reading CLAUDE.md first
-- Never duplicate logic — always search for existing implementations
-- If the task requires a service object, background job, or cron — say so explicitly before starting
-- If the task touches an external service (API, database, queue) — identify the correct client/adapter to use
+After confirmation:
+
+```sh
+git checkout main && git pull origin main
+git checkout -b [type]/[short-description]
+```
+
+Types: `feat/`, `fix/`, `chore/`, `refactor/`, `docs/`, `perf/`
+
+### 5. Implement
+
+Write the code following the plan and the rules in `CLAUDE.md`.
+
+- Services first, then controllers, then specs
+- Run tests as you go: `bundle exec rspec [file]`
+- Fix RuboCop offenses inline: `bundle exec rubocop -a`
+
+### 6. Verify
+
+Before committing, full suite must pass:
+
+```sh
+bundle exec rubocop
+bundle exec rspec
+```
+
+Do not commit broken code.
+
+### 7. Commit
+
+```sh
+git add [specific files — never blindly add everything]
+git commit -m "[type(scope): description]"
+```
+
+Conventional Commits format: `feat(metrics): add deployment frequency endpoint`
+
+### 8. Review
+
+Senior-level review of your own changes:
+
+- Right abstraction? Logic in the right layer?
+- Duplication? Does similar code already exist?
+- Tests cover success, failure, and edge cases?
+- Security: unvalidated input? exposed data?
+- Performance: N+1 queries? unbounded results?
+
+```
+--- CRITICAL (fix before PR) ---
+--- CONCERN (should fix) ---
+--- NITPICK (optional) ---
+--- VERDICT: APPROVED / NEEDS CHANGES ---
+```
+
+Fix any CRITICAL before continuing.
+
+### 9. Open PR
+
+```sh
+gh pr create --title "[type]: [description]" --body "$(cat <<'EOF'
+## What
+[what was built]
+
+## Why
+[why it was needed]
+
+## How
+[key decisions]
+
+## Testing
+[how to verify]
+
+## Checklist
+- [ ] Tests pass
+- [ ] No RuboCop offenses
+- [ ] No debug code or secrets
+EOF
+)"
+```
+
+### 10. Report
+
+```
+✅ Branch: feat/deployment-frequency
+✅ Commits: 1
+✅ Tests: 12 examples, 0 failures
+✅ RuboCop: no offenses
+✅ PR: https://github.com/org/repo/pull/1
+
+Next: /ship when CI is green.
+```

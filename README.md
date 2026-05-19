@@ -25,23 +25,19 @@ Inspired by how the best engineering teams work:
 
 ## The Workflow
 
-Every task follows the same flow, regardless of language or stack:
+Three commands. That's it.
 
 ```
-/init → /task → /plan → /branch → develop → /commit → /review → /pr → /ci → /ship
+/init → /task → /ship
 ```
 
-| Phase | Command | What happens |
-|-------|---------|-------------|
-| **Setup** | `/init` | Investigate project, generate full Claude Code environment |
-| **Define** | `/task` | Load context, clarify scope, prepare to work |
-| **Plan** | `/plan` | Architecture decisions before writing a single line |
-| **Build** | `/branch` | Create correctly named branch |
-| **Build** | `/commit` | Semantic commit with verification |
-| **Review** | `/review` | Senior-level code review before PR |
-| **Ship** | `/pr` | Create PR with real description |
-| **Ship** | `/ci` | Verify CI is green |
-| **Ship** | `/ship` | Full gate: review + CI + merge |
+| Command | When | What happens |
+|---------|------|-------------|
+| `/init` | Once, when starting a project | Investigates the codebase, generates the full Claude Code environment, commits and pushes |
+| `/task` | For every feature or fix | Plans → branches → implements → commits → reviews → opens PR |
+| `/ship` | When CI is green | Reviews + CI check + merges to main + deletes branch |
+
+**You only need to know three commands.** The rest happens automatically.
 
 ---
 
@@ -53,11 +49,11 @@ Every task follows the same flow, regardless of language or stack:
 # 1. Clone this foundation
 git clone git@github.com:amds92/engineering-foundation.git ~/engineering-foundation
 
-# 2. In your new project, copy the commands
+# 2. Copy the commands into your project
 mkdir -p your-project/.claude
 cp -r ~/engineering-foundation/.claude/commands your-project/.claude/commands
 
-# 3. Open Claude Code and let /init do the work
+# 3. Open Claude Code and run /init
 cd your-project
 claude
 /init
@@ -66,270 +62,114 @@ claude
 ### Existing project
 
 ```sh
-# 1. Copy the commands into your project
 cp -r ~/engineering-foundation/.claude/commands your-project/.claude/commands
-
-# 2. Open Claude Code and run /init — it investigates your codebase
 cd your-project
 claude
 /init
 ```
 
-`/init` reads your project, detects the stack, hunts for gotchas, and generates a complete Claude Code environment in under a minute. No manual configuration.
+---
+
+## What each command does
+
+### `/init`
+**Run once.** Investigates the project, generates the full environment, commits and pushes.
+
+What it creates:
+```
+CLAUDE.md                        ← project rules, auto-generated
+CLAUDE.local.md                  ← your personal overrides (gitignored)
+.claude/
+├── settings.json                ← shared permissions for the team
+├── output-styles/writing.md     ← Claude's tone, permanently
+├── hooks/pre-push.sh            ← lint + tests before every push
+└── rules/                       ← path-scoped rules (spec/, controllers/, etc.)
+specs/feature.md.template        ← contract template before coding
+```
 
 ---
 
-## What `/init` generates
+### `/task [description]`
+**The main command.** Does the full development cycle without you having to manage each step.
 
 ```
-your-project/
-├── CLAUDE.md                        ← project rules, auto-generated
-├── CLAUDE.local.md                  ← your personal overrides (gitignored)
-├── .gitignore                       ← updated with Claude-specific entries
-└── .claude/
-    ├── settings.json                ← shared permissions for the team
-    ├── settings.local.json          ← your personal permissions (gitignored)
-    ├── output-styles/
-    │   └── writing.md               ← Claude's tone and format, permanently
-    ├── hooks/
-    │   ├── pre-push.sh              ← lint + tests before every push
-    │   └── on-mcp-call.sh           ← audit/gate MCP tool calls
-    └── rules/
-        ├── testing.md               ← loads when editing spec files
-        ├── api.md                   ← loads when editing controllers
-        └── security.md              ← loads when editing auth/payment code
+/task Add deployment frequency endpoint
+/task Fix JWT token expiry bug
+/task Setup RSpec and testing infrastructure
 ```
 
-Plus `specs/feature.md.template` — a contract template for every feature.
+What it does automatically:
+1. Reads `CLAUDE.md` for project context
+2. Plans the implementation — shows you what will change and waits for confirmation
+3. Creates the right branch (`feat/`, `fix/`, `chore/`, etc.)
+4. Implements the code following project conventions
+5. Runs tests and linter — fixes issues before committing
+6. Commits with a semantic message
+7. Reviews the code (CRITICAL / CONCERN / NITPICK)
+8. Opens the PR with a real description
+
+You only intervene to **confirm the plan** and **review the PR**.
+
+---
+
+### `/ship`
+**Merge when ready.** Runs the full gate before touching main.
+
+1. Code review — aborts if CRITICAL issues found
+2. CI check — aborts if tests are red
+3. Merges with `--no-ff`, deletes branch (remote + local)
+
+```
+=== REVIEW ===   ✅ No critical issues
+=== CI ===       ✅ All jobs green
+=== RESULT ===   ✅ Merged feat/deployment-frequency → main
+```
+
+---
+
+## Advanced commands
+
+For when you want manual control over individual steps:
+
+| Command | What it does |
+|---------|-------------|
+| `/plan` | Architecture planning only — no code |
+| `/branch` | Create branch only |
+| `/commit` | Semantic commit only |
+| `/review` | Code review only |
+| `/pr` | Open PR only |
+| `/ci` | Check CI status only |
+
+These are the building blocks `/task` uses internally. Use them when you need to intervene mid-flow.
 
 ---
 
 ## The "Quiet Files" — what most people miss
 
-Everyone talks about CLAUDE.md. Few people use the files that make Claude behave correctly *automatically*:
+Everyone talks about `CLAUDE.md`. Few people use the files that make Claude behave correctly *automatically*:
 
 | File | Purpose |
 |------|---------|
 | `CLAUDE.local.md` | Personal overrides — gitignored, never affects the team |
 | `.claude/settings.json` | Shared permissions committed to the repo |
 | `.claude/settings.local.json` | Your personal permissions — gitignored |
-| `.claude/output-styles/writing.md` | Defines Claude's tone permanently — no more "be shorter" |
-| `.claude/hooks/pre-push.sh` | Deterministic: runs every time before a push |
-| `.claude/hooks/on-mcp-call.sh` | Fires on every MCP tool call — log, audit, or block |
+| `.claude/output-styles/writing.md` | Claude's tone permanently — no more "be shorter" |
+| `.claude/hooks/pre-push.sh` | Runs every time before a push — deterministic |
 | `.claude/rules/` | Path-scoped rules — loads only when editing matching files |
-
----
-
-## Slash Commands Reference
-
-### `/init`
-**Start here.** Investigates your project and generates a complete Claude Code environment automatically.
-
-- Detects stack, framework, database, CI, deployment
-- Reads existing patterns and conventions from the code
-- Hunts for non-obvious gotchas (stale memoization, test setup requirements, deprecated code paths)
-- Generates `CLAUDE.md`, `.claude/rules/`, `settings.json`, `output-styles/writing.md`, hooks, and `CLAUDE.local.md`
-- Presents everything for review before writing
-
-```
-/init
-```
-
----
-
-### `/task [description]`
-Entry point for any piece of work. Loads project context, clarifies scope, and prepares Claude to work as a senior engineer on this specific task. Never start coding without running this first.
-
-```
-/task Implement pagination for the users endpoint
-/task Fix memory leak in the background job processor
-/task Add Elasticsearch integration for product search
-```
-
----
-
-### `/plan`
-Architecture before code. Identifies the right abstraction (service, job, cron, client, concern), checks for existing code to avoid duplication, defines what will change and what tests will be written. Presents a plan for confirmation before writing anything.
-
-```
-/plan
-```
-
----
-
-### `/branch`
-Creates a correctly named branch from an up-to-date `main`.
-
-| Type | When |
-|------|------|
-| `feat/` | New functionality |
-| `fix/` | Bug fixes |
-| `chore/` | Maintenance, deps, config |
-| `refactor/` | Code improvement, no behaviour change |
-| `docs/` | Documentation only |
-| `perf/` | Performance improvements |
-
-```
-/branch
-```
-
----
-
-### `/commit`
-Semantic commit following [Conventional Commits](https://www.conventionalcommits.org). Checks for debug code, secrets, and unrelated changes before committing.
-
-```
-/commit
-```
-
-**Output format:**
-```
-feat(users): add cursor-based pagination
-
-Replaces offset pagination which broke with large datasets.
-Closes #312
-```
-
----
-
-### `/review`
-Senior-level code review of everything changed since branching. Checks architecture, separation of concerns, duplication, test coverage, security, and performance. Groups findings by severity.
-
-```
-/review
-```
-
-**Output:**
-```
---- CRITICAL (must fix before merge) ---
---- CONCERN (should fix) ---
---- NITPICK (optional) ---
---- VERDICT: APPROVED / NEEDS CHANGES ---
-```
-
----
-
-### `/pr`
-Creates a PR with a real description. Runs linter and tests first — never opens a PR with failures.
-
-```
-/pr
-```
-
-**PR structure:**
-```markdown
-## What
-## Why
-## How
-## Testing
-## Checklist
-```
-
----
-
-### `/ci`
-Checks GitHub Actions CI status for the current branch. Shows per-job status and exact error lines if failing.
-
-```
-/ci
-```
-
-**Output:**
-```
-Branch: feat/user-pagination
-Status: ✅ GREEN
-
-Jobs:
-  ✅ test (Ruby 3.2) — 45s
-  ✅ lint (RuboCop)  — 12s
-```
-
----
-
-### `/ship`
-Full gate before merging. Review + CI must both pass or it aborts with a clear reason.
-
-```
-/ship
-```
-
-**Output:**
-```
-=== REVIEW ===   ✅ No critical issues
-=== CI ===       ✅ All jobs green
-=== RESULT ===   ✅ Merged feat/user-pagination → main
-```
 
 ---
 
 ## CLAUDE.md
 
-The `CLAUDE.md` file is what turns Claude from a generic assistant into a senior engineer who knows your project. Generated by `/init`, refined by you.
+What turns Claude from a generic assistant into a senior engineer who knows your project. Generated by `/init`, refined by you.
 
-**Key principles (from Anthropic's own practices):**
+**Key principles:**
 - Under 150 lines — every line must answer "would removing this cause Claude to make mistakes?"
 - Specific over vague — `bundle exec rspec` not "run the tests"
 - No standard conventions — don't explain what Rails is
-- Always include a **"Things that will bite you"** section — the non-obvious gotchas
+- Always include a **"Things that will bite you"** section
 
 See [`templates/CLAUDE.md.template`](templates/CLAUDE.md.template) for the full template.
-
----
-
-## Path-scoped Rules
-
-For larger projects, use `.claude/rules/` to keep CLAUDE.md short. Rule files only load when Claude edits matching files — keeping the context window clean.
-
-```
-.claude/
-└── rules/
-    ├── testing.md      # loads when editing spec/**/*
-    ├── api.md          # loads when editing controllers
-    └── security.md     # loads when editing auth/payment code
-```
-
-See [`templates/rules-examples/`](templates/rules-examples/) for examples.
-
----
-
-## Hooks
-
-Hooks run deterministically — not by asking Claude, but by the harness itself.
-
-```
-.claude/hooks/
-├── pre-push.sh       # lint + tests before every push, auto-detects stack
-└── on-mcp-call.sh    # fires on every MCP tool call — log, audit, or block
-```
-
-See [`templates/hooks/`](templates/hooks/) for ready-to-use scripts.
-
----
-
-## Output Style
-
-Put this once in `.claude/output-styles/writing.md` and never type "be more concise" again. Defines Claude's tone, response format, and what to skip — permanently, for the whole project.
-
-See [`templates/output-styles/writing.md`](templates/output-styles/writing.md).
-
----
-
-## Feature Specs
-
-Before writing a single line of code, fill in `specs/feature.md.template`. It's the contract between what you want and what gets built — acceptance criteria, out-of-scope decisions, open questions, definition of done.
-
-See [`templates/specs/feature.md.template`](templates/specs/feature.md.template).
-
----
-
-## Guides
-
-| Guide | What it covers |
-|-------|---------------|
-| [Git Flow](guides/git-flow.md) | Branches, commits, rebasing, merging |
-| [Architecture](guides/architecture.md) | Language-agnostic design decisions |
-| [Code Review](guides/code-review.md) | How to give and receive reviews |
-| [PR Culture](guides/pr-culture.md) | What makes a great PR |
 
 ---
 
@@ -346,22 +186,22 @@ See [`templates/specs/feature.md.template`](templates/specs/feature.md.template)
 ```
 engineering-foundation/
 ├── .claude/
-│   └── commands/          ← 9 slash commands
-│       ├── init.md
-│       ├── task.md
-│       ├── plan.md
-│       ├── branch.md
-│       ├── commit.md
-│       ├── review.md
-│       ├── pr.md
-│       ├── ci.md
-│       └── ship.md
-├── guides/                ← engineering principles
+│   └── commands/
+│       ├── init.md       ← setup: generates full environment + commits + pushes
+│       ├── task.md       ← main: plan → branch → code → commit → review → PR
+│       ├── ship.md       ← merge: review gate + CI gate + merge
+│       ├── plan.md       ← advanced: planning only
+│       ├── branch.md     ← advanced: branch only
+│       ├── commit.md     ← advanced: commit only
+│       ├── review.md     ← advanced: review only
+│       ├── pr.md         ← advanced: PR only
+│       └── ci.md         ← advanced: CI check only
+├── guides/
 │   ├── architecture.md
 │   ├── code-review.md
 │   ├── git-flow.md
 │   └── pr-culture.md
-├── templates/             ← copy these to your project
+├── templates/
 │   ├── CLAUDE.md.template
 │   ├── CLAUDE.local.md.template
 │   ├── PR_TEMPLATE.md
@@ -378,7 +218,7 @@ engineering-foundation/
 │       ├── testing.md
 │       ├── api.md
 │       └── security.md
-└── CLAUDE.md              ← context for this repo itself
+└── CLAUDE.md
 ```
 
 ---
