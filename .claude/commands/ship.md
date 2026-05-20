@@ -1,72 +1,90 @@
+---
+description: Merge to main. Use when CI is green and the PR is approved. Runs review gate + CI check + rebase + fast-forward merge + branch cleanup.
+disable-model-invocation: true
+---
+
 # Ship
 
-Full readiness gate before merging to main. Nothing broken ever lands on main.
-
-## The contract
-
-This command guarantees:
-1. Code has been reviewed by a senior engineer (Claude)
-2. All tests pass on CI
-3. No linter errors
-4. The merge is clean and the branch is deleted after
-
-If any gate fails — it stops. It tells you exactly what to fix.
+Full gate before merging. Review must pass. CI must be green. Nothing broken ever lands on main.
 
 ## Steps
 
-### Gate 1: Code Review
-Run the full `/review` flow:
-- Read all changed files
-- Check architecture, quality, tests, security, performance
-- **If CRITICAL issues found:** list them, abort, do not continue
+### Gate 1: Self-review
 
-### Gate 2: CI Status
-Run the full `/ci` flow:
-- Check GitHub Actions for the current branch
-- **If CI is red or in progress:** show status, abort, do not continue
-- **If no CI runs exist:** warn and ask for confirmation before proceeding
+Read all changes since branching:
+
+```sh
+git diff main...HEAD
+```
+
+Check:
+- Architecture — right abstraction? logic in the right layer?
+- Duplication — does similar code already exist?
+- Tests — success, failure, and edge cases covered?
+- Security — unvalidated input? exposed data? secrets in code?
+- Performance — N+1 queries? unbounded results?
+
+```
+--- CRITICAL (must fix before merge) ---
+--- CONCERN (should fix) ---
+--- NITPICK (optional) ---
+--- VERDICT: APPROVED / NEEDS CHANGES ---
+```
+
+If CRITICAL issues found: fix them, commit, re-run `/ship`. Do not proceed.
+
+### Gate 2: CI
+
+```sh
+gh run list --branch $(git branch --show-current) --limit 1
+```
+
+- ✅ All jobs green → continue
+- ❌ Any job failing → show the failing job and log, abort
+- ⏳ Still running → wait or abort and re-run when done
 
 ### Gate 3: Merge
-If both gates pass:
+
+Rebase onto main for a clean linear history, then fast-forward merge:
 
 ```sh
 BRANCH=$(git branch --show-current)
 
+git fetch origin main
+git rebase origin/main
+
 git checkout main
 git pull origin main
-git merge --no-ff $BRANCH -m "Merge branch '$BRANCH'"
+git merge --ff-only $BRANCH
+
 git push origin main
+
+# Clean up
 git push origin --delete $BRANCH
 git branch -d $BRANCH
 ```
 
-Confirm with:
+If rebase has conflicts: resolve them, `git rebase --continue`, then retry.
+
+Verify:
+
 ```sh
-git log --oneline -3
+git log --oneline -5
 ```
 
-## Output format
+## Output
 
 ```
-=== REVIEW ===
-✅ No critical issues found
-[or list of issues if any]
-
-=== CI ===
-✅ All jobs green
-[or status if failing]
-
-=== RESULT ===
-✅ Merged 'feat/user-pagination' → main
-✅ Branch deleted (remote + local)
-Commit: abc1234 feat(users): add cursor-based pagination
+=== REVIEW ===   ✅ No critical issues
+=== CI ===       ✅ All jobs green
+=== RESULT ===   ✅ Merged feat/deployment-frequency → main (fast-forward)
+                 ✅ Branch deleted (remote + local)
 ```
 
 Or if blocked:
 
 ```
-=== RESULT ===
-❌ Aborted — [reason: CRITICAL issues in review / CI is red / CI still running]
+=== RESULT ===   ❌ Aborted — [reason]
 Fix the issues above and run /ship again.
 ```
 
@@ -74,6 +92,7 @@ Fix the issues above and run /ship again.
 
 - Never merge if CI is red
 - Never merge if there are CRITICAL review issues
-- Always use `--no-ff` — preserve branch history in main
+- Always rebase before merge — no merge commits, no diverged history
+- Always `--ff-only` — if it can't fast-forward, the rebase didn't work
 - Always delete the branch after merge (remote + local)
-- Never force push to main — ever
+- Never force push to main

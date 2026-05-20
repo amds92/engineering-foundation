@@ -1,31 +1,14 @@
 # Engineering Foundation
 
-> A language-agnostic engineering operating system for serious developers.
+> A language-agnostic engineering operating system for Claude Code.
 
-Stop reinventing your workflow on every project. This foundation gives you a proven, opinionated development system that works whether you're building a Rails API, a Python service, a PHP backend, or an Ember frontend — with Claude Code as a senior engineer on every project.
+Three commands. Any language. Any stack. Claude works like a senior engineer who knows your project.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---
 
-## Philosophy
-
-Inspired by how the best engineering teams work:
-
-- **Shopify** — rebase daily, squash before merge, staging is mandatory
-- **Thoughtbot** — linters own style, humans own logic, rebase-only history
-- **37signals** — PRs are culture transmission, nitpicking is rigor not pedantry
-- **GitHub** — small PRs, single-purpose, CI on every push
-- **Addy Osmani** — AI as a workflow enforcer, not just a code generator
-- **Anthropic** — CLAUDE.md under 200 lines, specific over vague, gotchas documented
-
-**The core belief:** Claude without context is a junior. Claude with context is a senior. This foundation gives Claude everything it needs to think and act like a senior engineer on your specific project.
-
----
-
-## The Workflow
-
-Three commands. That's it.
+## How it works
 
 ```
 /init → /task → /ship
@@ -33,97 +16,127 @@ Three commands. That's it.
 
 | Command | When | What happens |
 |---------|------|-------------|
-| `/init` | Once, when starting a project | Investigates the codebase, generates the full Claude Code environment, commits and pushes |
-| `/task` | For every feature or fix | Plans → branches → implements → commits → reviews → opens PR |
-| `/ship` | When CI is green | Reviews + CI check + merges to main + deletes branch |
+| `/init` | Once per project | Investigates codebase, generates environment, commits and pushes |
+| `/task [description]` | Every feature or fix | Plans → branches → implements → verifies → commits → reviews → opens PR |
+| `/ship` | When CI is green | Review gate + CI gate + rebase + fast-forward merge + branch cleanup |
 
-**You only need to know three commands.** The rest happens automatically.
+That's it. You describe what you want. Claude figures out how to build it, verifies the work, and hands you a PR.
 
 ---
 
-## Quick Start
-
-### New project
+## Quick start
 
 ```sh
-# 1. Clone this foundation
+# Clone the foundation
 git clone git@github.com:amds92/engineering-foundation.git ~/engineering-foundation
 
-# 2. Copy the commands into your project
+# Copy commands into your project
 mkdir -p your-project/.claude
 cp -r ~/engineering-foundation/.claude/commands your-project/.claude/commands
 
-# 3. Open Claude Code and run /init
+# Open Claude Code and run /init
 cd your-project
 claude
 /init
 ```
 
-### Existing project
+`/init` investigates your project, generates everything, and pushes. Then:
 
-```sh
-cp -r ~/engineering-foundation/.claude/commands your-project/.claude/commands
-cd your-project
-claude
-/init
+```
+/task Add user authentication
+```
+
+Claude plans, asks for confirmation, then writes code, runs tests, commits, reviews, and opens a PR — without you managing each step.
+
+---
+
+## What `/init` generates
+
+```
+your-project/
+├── CLAUDE.md                          ← project rules (auto-generated, ~100 lines)
+├── CLAUDE.local.md                    ← your personal overrides (gitignored)
+└── .claude/
+    ├── settings.json                  ← permissions + hooks
+    ├── hooks/
+    │   ├── pre-bash.sh                ← blocks secrets before every git commit
+    │   └── post-edit.sh               ← runs linter after every file edit
+    ├── output-styles/
+    │   └── writing.md                 ← Claude's tone, permanently
+    └── rules/
+        ├── testing.md                 ← loads when editing spec/ files
+        └── api.md                     ← loads when editing controllers
+```
+
+Plus `specs/feature.md.template` — a contract to fill in before any feature work.
+
+---
+
+## Hooks — the part most people miss
+
+Hooks are deterministic. They don't rely on Claude remembering to do something — they run automatically, every time, no exceptions.
+
+**`PreToolUse` on Bash** — runs before every bash command Claude executes:
+- Scans staged files for `master.key`, `.env`, `credentials.yml.enc`, private keys
+- **Blocks the command** with a clear error if secrets are found
+- The `master.key` incident can't happen
+
+**`PostToolUse` on Edit/Write** — runs after every file edit:
+- Automatically runs the linter on the changed file
+- Detects stack: Ruby → RuboCop, JS/TS → ESLint, Python → Ruff, PHP → PHPCS, Go → gofmt
+- Issues surface immediately, not at commit time
+
+These are configured in `.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [{
+      "matcher": "Bash",
+      "hooks": [{"type": "command", "command": ".claude/hooks/pre-bash.sh"}]
+    }],
+    "PostToolUse": [{
+      "matcher": "Edit|Write",
+      "hooks": [{"type": "command", "command": ".claude/hooks/post-edit.sh"}]
+    }]
+  }
+}
 ```
 
 ---
 
-## What each command does
+## CLAUDE.md
 
-### `/init`
-**Run once.** Investigates the project, generates the full environment, commits and pushes.
+What turns Claude from a generic assistant into a senior engineer who knows your project.
 
-What it creates:
+**Rules (from Anthropic's own practices):**
+- Under 100 lines — for each line ask: "would removing this cause Claude to make mistakes?" If not, cut it
+- Specific over vague: `bundle exec rspec` not "run the tests"
+- No standard conventions — don't explain what Rails or REST are
+- Always include **"Things that will bite you"** — the non-obvious gotchas
+
+CLAUDE.md supports imports:
+```markdown
+See @README.md for project overview.
+# Additional Instructions
+- Git workflow: @docs/git-workflow.md
 ```
-CLAUDE.md                        ← project rules, auto-generated
-CLAUDE.local.md                  ← your personal overrides (gitignored)
-.claude/
-├── settings.json                ← shared permissions for the team
-├── output-styles/writing.md     ← Claude's tone, permanently
-├── hooks/pre-push.sh            ← lint + tests before every push
-└── rules/                       ← path-scoped rules (spec/, controllers/, etc.)
-specs/feature.md.template        ← contract template before coding
-```
+
+Use `.claude/rules/` for path-scoped conventions that only load when editing specific files.
 
 ---
 
-### `/task [description]`
-**The main command.** Does the full development cycle without you having to manage each step.
+## Git workflow
 
-```
-/task Add deployment frequency endpoint
-/task Fix JWT token expiry bug
-/task Setup RSpec and testing infrastructure
-```
+Based on Thoughtbot's approach:
 
-What it does automatically:
-1. Reads `CLAUDE.md` for project context
-2. Plans the implementation — shows you what will change and waits for confirmation
-3. Creates the right branch (`feat/`, `fix/`, `chore/`, etc.)
-4. Implements the code following project conventions
-5. Runs tests and linter — fixes issues before committing
-6. Commits with a semantic message
-7. Reviews the code (CRITICAL / CONCERN / NITPICK)
-8. Opens the PR with a real description
+1. **Branch** from up-to-date main
+2. **Develop** with frequent commits
+3. **Rebase** onto main before merge — no merge commits, linear history
+4. **Fast-forward merge** (`--ff-only`) — if it can't fast-forward, the rebase didn't work
+5. **Delete** branch after merge (remote + local)
 
-You only intervene to **confirm the plan** and **review the PR**.
-
----
-
-### `/ship`
-**Merge when ready.** Runs the full gate before touching main.
-
-1. Code review — aborts if CRITICAL issues found
-2. CI check — aborts if tests are red
-3. Merges with `--no-ff`, deletes branch (remote + local)
-
-```
-=== REVIEW ===   ✅ No critical issues
-=== CI ===       ✅ All jobs green
-=== RESULT ===   ✅ Merged feat/deployment-frequency → main
-```
+`/ship` handles steps 3–5 automatically after review and CI pass.
 
 ---
 
@@ -133,51 +146,14 @@ For when you want manual control over individual steps:
 
 | Command | What it does |
 |---------|-------------|
-| `/plan` | Architecture planning only — no code |
+| `/plan` | Architecture planning only |
 | `/branch` | Create branch only |
 | `/commit` | Semantic commit only |
 | `/review` | Code review only |
 | `/pr` | Open PR only |
 | `/ci` | Check CI status only |
 
-These are the building blocks `/task` uses internally. Use them when you need to intervene mid-flow.
-
----
-
-## The "Quiet Files" — what most people miss
-
-Everyone talks about `CLAUDE.md`. Few people use the files that make Claude behave correctly *automatically*:
-
-| File | Purpose |
-|------|---------|
-| `CLAUDE.local.md` | Personal overrides — gitignored, never affects the team |
-| `.claude/settings.json` | Shared permissions committed to the repo |
-| `.claude/settings.local.json` | Your personal permissions — gitignored |
-| `.claude/output-styles/writing.md` | Claude's tone permanently — no more "be shorter" |
-| `.claude/hooks/pre-push.sh` | Runs every time before a push — deterministic |
-| `.claude/rules/` | Path-scoped rules — loads only when editing matching files |
-
----
-
-## CLAUDE.md
-
-What turns Claude from a generic assistant into a senior engineer who knows your project. Generated by `/init`, refined by you.
-
-**Key principles:**
-- Under 150 lines — every line must answer "would removing this cause Claude to make mistakes?"
-- Specific over vague — `bundle exec rspec` not "run the tests"
-- No standard conventions — don't explain what Rails is
-- Always include a **"Things that will bite you"** section
-
-See [`templates/CLAUDE.md.template`](templates/CLAUDE.md.template) for the full template.
-
----
-
-## Requirements
-
-- [Claude Code](https://claude.ai/code)
-- [GitHub CLI](https://cli.github.com/) — `gh auth login` once
-- Git
+These are the building blocks `/task` uses internally.
 
 ---
 
@@ -187,15 +163,15 @@ See [`templates/CLAUDE.md.template`](templates/CLAUDE.md.template) for the full 
 engineering-foundation/
 ├── .claude/
 │   └── commands/
-│       ├── init.md       ← setup: generates full environment + commits + pushes
-│       ├── task.md       ← main: plan → branch → code → commit → review → PR
-│       ├── ship.md       ← merge: review gate + CI gate + merge
-│       ├── plan.md       ← advanced: planning only
-│       ├── branch.md     ← advanced: branch only
-│       ├── commit.md     ← advanced: commit only
-│       ├── review.md     ← advanced: review only
-│       ├── pr.md         ← advanced: PR only
-│       └── ci.md         ← advanced: CI check only
+│       ├── init.md        ← setup: investigate + generate + push
+│       ├── task.md        ← main: plan → branch → code → verify → commit → review → PR
+│       ├── ship.md        ← merge: review + CI + rebase + ff-only merge
+│       ├── plan.md        ← advanced
+│       ├── branch.md      ← advanced
+│       ├── commit.md      ← advanced
+│       ├── review.md      ← advanced
+│       ├── pr.md          ← advanced
+│       └── ci.md          ← advanced
 ├── guides/
 │   ├── architecture.md
 │   ├── code-review.md
@@ -204,12 +180,11 @@ engineering-foundation/
 ├── templates/
 │   ├── CLAUDE.md.template
 │   ├── CLAUDE.local.md.template
-│   ├── PR_TEMPLATE.md
-│   ├── settings.json.template
+│   ├── settings.json.template      ← with PreToolUse + PostToolUse hooks
 │   ├── settings.local.json.template
 │   ├── hooks/
-│   │   ├── pre-push.sh
-│   │   └── on-mcp-call.sh
+│   │   ├── pre-bash.sh             ← security: blocks secrets before commits
+│   │   └── post-edit.sh            ← quality: lints after every edit
 │   ├── output-styles/
 │   │   └── writing.md
 │   ├── specs/
@@ -223,14 +198,25 @@ engineering-foundation/
 
 ---
 
-## Contributing
+## Requirements
 
-This foundation improves when it's used. If something doesn't work, open a PR.
-
-- Follow the same workflow this repo documents
-- Update the relevant guide if behaviour changes
-- Add real gotchas to the template when you discover them in the wild
+- [Claude Code](https://claude.ai/code)
+- [GitHub CLI](https://cli.github.com/) — `gh auth login` once
+- Git
 
 ---
 
-Built by [André Silva](https://github.com/amds92) · Inspired by Thoughtbot, 37signals, Shopify, Addy Osmani, and Anthropic's own engineering practices.
+## Philosophy
+
+Inspired by how the best engineering teams work:
+
+- **Anthropic** — CLAUDE.md under 100 lines, hooks over instructions, verify your own work
+- **Thoughtbot** — rebase workflow, linear history, code review culture
+- **37signals** — PRs are culture transmission, small and single-purpose
+- **GitHub** — CI on every push, nothing broken lands on main
+
+**The core belief:** Claude without context is a junior. Claude with context and good tooling is a senior. This foundation provides the context and tooling.
+
+---
+
+Built by [André Silva](https://github.com/amds92) · Grounded in Anthropic, Thoughtbot, 37signals, and GitHub engineering practices.

@@ -1,95 +1,56 @@
 # [Project Name]
 
-[One sentence: what this project does and for whom.]
+[One sentence: what it does and for whom.]
 
 ## Stack
-
-- **Language:** [e.g. Ruby 3.3 / Python 3.12 / TypeScript 5.4 / PHP 8.3]
-- **Framework:** [e.g. Rails 8.1 / Django 5 / Next.js 14 / Laravel 11]
-- **Database:** [e.g. PostgreSQL 16 / MySQL 8 / MongoDB 7]
-- **Jobs:** [e.g. Sidekiq / Celery / BullMQ — or "none"]
-- **Cache:** [e.g. Redis / Memcached — or "none"]
-- **Tests:** [e.g. RSpec / pytest / Jest / PHPUnit]
-- **Lint:** [e.g. RuboCop / Ruff / ESLint / PHPCS]
-- **CI:** [e.g. GitHub Actions]
-- **Deploy:** [e.g. Kamal / Fly.io / Heroku / AWS]
+- **Language:** [e.g. Ruby 3.3]
+- **Framework:** [e.g. Rails 8.1 API-only]
+- **Database:** [e.g. PostgreSQL]
+- **Jobs:** [e.g. Sidekiq / SolidQueue / none]
+- **Auth:** [e.g. JWT / Devise / none]
+- **Tests:** [e.g. RSpec]
+- **Lint:** [e.g. RuboCop]
+- **Deploy:** [e.g. Kamal / Fly.io / Heroku]
 
 ## Commands
-
 ```sh
-# Install dependencies
+# Install
 [e.g. bundle install]
 
-# Start server
-[e.g. rails s]
-
-# Run all tests
+# Test
 [e.g. bundle exec rspec]
 
-# Run single test file
-[e.g. bundle exec rspec spec/services/create_user_spec.rb]
+# Single test
+[e.g. bundle exec rspec spec/services/foo_spec.rb]
 
-# Run linter
+# Lint
 [e.g. bundle exec rubocop]
 
-# Run linter with autofix
-[e.g. bundle exec rubocop -a]
+# Start
+[e.g. bin/dev]
 ```
 
 ## Structure
-
-Only document what's non-obvious. Skip standard conventions.
-
-```
-[e.g.]
-app/services/     ← all business logic, always use service objects
-app/clients/      ← all external API calls, nowhere else
-app/queries/      ← complex ActiveRecord queries
-app/jobs/         ← background jobs, must be idempotent
-spec/             ← mirrors app/ structure
-```
-
-## Architecture rules
-
-- [e.g. "Controllers are thin — delegate all logic to services"]
-- [e.g. "Services return a Result object with success? and failure?"]
-- [e.g. "Never call external APIs inline — always use app/clients/"]
-- [e.g. "Background jobs for anything that takes > 500ms"]
-
-## Non-obvious project rules
-
-- [e.g. "All monetary values stored in pence/cents — never floats"]
-- [e.g. "Soft deletes everywhere — never hard-delete records"]
-- [e.g. "All dates stored in UTC, converted at display time"]
-- [e.g. "Feature flags via Flipper — ship incomplete work behind flags"]
+[Only what's non-obvious. Skip standard conventions.]
+- `app/services/` — all business logic
+- `app/clients/` — all external API calls, nowhere else
+- `app/queries/` — complex ActiveRecord queries
 
 ## Git flow
+- Branches: `feat/`, `fix/`, `chore/`, `refactor/`
+- Commits: Conventional Commits (`feat:`, `fix:`, `chore:`)
+- Never push to main — PRs only
 
-- Branches: `feat/`, `fix/`, `chore/`, `refactor/`, `docs/`
-- Commits: Conventional Commits (`feat:`, `fix:`, `chore:`, etc.)
-- PRs: small and single-purpose, one concern per PR
-- Never push directly to `main`
+## Rules
+- [Non-obvious rule — e.g. "All monetary values in cents, never floats"]
+- [Non-obvious rule — e.g. "Never hard-delete records, use soft deletes"]
+- [Non-obvious rule — e.g. "Background jobs must be idempotent"]
 
-## IMPORTANT — read before touching anything
-
-- [e.g. "DO NOT touch LegacyPaymentService — full rewrite in progress on feat/payments-v2"]
-- [e.g. "DO NOT change the User model without migrating the audit log"]
-- [e.g. "Check app/services/ before creating anything new — avoid duplication"]
-
-## External services
-
-| Service | Purpose | Location |
-|---------|---------|----------|
-| [e.g. Stripe] | [Payments] | [app/clients/stripe_client.rb] |
-| [e.g. SendGrid] | [Email] | [app/mailers/ + app/clients/sendgrid_client.rb] |
+## IMPORTANT
+- [Critical constraint — e.g. "DO NOT touch LegacyPaymentService — rewrite in progress"]
+- [Critical constraint — e.g. "Check app/services/ before creating anything new"]
 
 ## Things that will bite you
-
-The non-obvious gotchas that aren't in the code. Inspired by how Anthropic documents their own projects.
-
-- [e.g. "The `User#full_name` method returns nil for OAuth users — always use `User#display_name`"]
-- [e.g. "Sidekiq jobs run in a separate process — ActiveRecord objects passed as arguments get stale, always pass IDs"]
-- [e.g. "The test suite requires Redis running locally — `redis-server` before `rspec`"]
-- [e.g. "`Order#total` is memoized — call `order.reload` after any payment update or you get stale data"]
-- [e.g. "Elasticsearch index is not auto-updated in test env — call `refresh_index!` after creating records in specs"]
-- [e.g. "The `staging` branch auto-deploys to staging — never merge experimental work there without a feature flag"]
+- [e.g. "`User#full_name` returns nil for OAuth users — use `User#display_name`"]
+- [e.g. "Test suite requires Redis running — `redis-server` before `rspec`"]
+- [e.g. "`Order#total` is memoized — call `reload` after payment updates"]

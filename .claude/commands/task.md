@@ -1,32 +1,37 @@
+---
+description: Full development cycle for a task. Use for any feature, fix, or chore. Reads CLAUDE.md, plans, creates branch, implements, runs verification, commits, self-reviews, and opens PR. Only stops for human decisions.
+disable-model-invocation: true
+---
+
 # Task
 
-Full development cycle for a single task. Reads context, plans, branches, implements, commits, reviews, and opens a PR.
+Full development cycle. Reads context → plans → branches → implements → verifies → commits → reviews → opens PR.
 
-A senior engineer doesn't stop to ask for help on problems they can solve themselves. This command follows that principle: investigate, diagnose, fix, and continue. Only stop when a **human decision** is genuinely required.
+A senior engineer doesn't stop for problems they can solve. This command follows that principle: investigate, fix, continue. Only stop when a **human decision** is genuinely required.
 
 ## Usage
 
 ```
-/task Setup RSpec and testing infrastructure
 /task Add deployment frequency endpoint
 /task Fix JWT token expiry bug
+/task Setup RSpec and testing infrastructure
 ```
 
-## When to stop and ask vs. when to solve autonomously
+---
 
-**Solve autonomously — never ask about these:**
-- Environment issues (wrong Ruby version, missing Node, conflicting version managers, OpenSSL errors, missing system deps)
-- Dependency conflicts (wrong gem/package versions, lock file issues)
-- Linter errors and autofix
-- Test failures caused by setup or config issues
-- Missing directories or files
-- CI config that needs updating
+## When to solve autonomously vs. when to stop
 
-**Stop and ask — human decision required:**
+**Solve without asking:**
+- Environment issues (wrong language version, conflicting version managers, missing deps)
+- Dependency conflicts
+- Linter errors — fix them
+- Test failures from setup or config issues
+- Missing directories
+
+**Stop and ask:**
 - Ambiguous requirements ("what should happen when X?")
-- Architecture choices with real tradeoffs ("service object or concern?")
-- Behaviour that could break existing users
-- Anything that requires a secret, credential, or external account
+- Architecture choices with real tradeoffs
+- Changes that could break existing users
 
 ---
 
@@ -34,21 +39,21 @@ A senior engineer doesn't stop to ask for help on problems they can solve themse
 
 ### 1. Load context
 
-Read `CLAUDE.md`. If it doesn't exist, stop: "No CLAUDE.md found. Run /init first."
+Read `CLAUDE.md`. If missing: stop — "No CLAUDE.md found. Run /init first."
 
 Also read `CLAUDE.local.md` and relevant `.claude/rules/` files.
 
-### 2. Understand the task
+### 2. Understand
 
 Restate in one sentence. If genuinely ambiguous, ask one question. If clear, proceed.
 
 ### 3. Plan
 
-Check before writing anything:
+Before writing anything, check:
 - What needs to be created or changed
 - Whether similar code already exists — never duplicate
-- The right abstraction for the stack (service, query, middleware, handler, module, etc.)
-- What tests will be written
+- The right abstraction for the stack
+- What tests will verify the work is correct
 
 Present the plan:
 
@@ -63,8 +68,10 @@ Present the plan:
 **Files to change:**
 - [file]
 
-**Tests:**
-- [what will be tested]
+**Verification:**
+- Tests: [what specs will pass]
+- Linter: clean
+- Manual check: [curl command or behaviour to verify]
 
 Proceed?
 ```
@@ -80,72 +87,63 @@ git checkout -b [type]/[short-description]
 
 Types: `feat/`, `fix/`, `chore/`, `refactor/`, `docs/`, `perf/`
 
-### 5. Fix the environment first
+### 5. Fix environment first
 
-Before writing any feature code, ensure the environment works.
-
-**Detect the stack and fix accordingly:**
+Before writing feature code, ensure the environment works. **Read the full error. Identify root cause. Fix. Retry.**
 
 **Ruby:**
-- If rbenv and rvm conflict → remove rvm: `rvm implode --force` or disable it in shell profile
-- If openssl errors → `gem pristine openssl` or recompile: `gem install openssl -- --with-openssl-dir=$(brew --prefix openssl@3)`
-- If wrong Ruby version → check `.ruby-version`, set with rbenv: `rbenv local [version]`
-- If `bundle install` fails → read the error, fix the specific gem conflict, retry
+- rbenv/rvm conflict → `rvm implode --force` to remove rvm
+- OpenSSL errors → `gem pristine openssl` or `gem install openssl -- --with-openssl-dir=$(brew --prefix openssl@3)`
+- Wrong version → `rbenv local [version]`
+- `bundle install` fails → read error, fix specific conflict
 
 **Node/JS:**
-- If nvm and n conflict → pick one, remove the other from PATH
-- If wrong Node version → check `.nvmrc` or `.node-version`, switch: `nvm use [version]`
-- If `npm install` / `yarn` / `pnpm` fails → read the error, fix lockfile or version conflict
+- nvm/n conflict → pick one, remove other from PATH
+- Wrong version → `nvm use [version]` or check `.nvmrc`
+- `npm install` fails → read error, fix lockfile or version
 
 **Python:**
-- If wrong Python version → check `.python-version`, use pyenv: `pyenv local [version]`
-- If virtualenv issues → recreate: `python -m venv .venv && source .venv/bin/activate`
-- If `pip install` fails → upgrade pip first, then retry
+- Wrong version → `pyenv local [version]`
+- Virtualenv issues → `python -m venv .venv && source .venv/bin/activate`
 
-**PHP:**
-- If wrong PHP version → check `.php-version`, switch with phpenv or brew
-- If `composer install` fails → read the error, fix version constraint
+**Go:** `go mod tidy` for module issues
 
-**Go:**
-- If wrong Go version → check `go.mod`, install correct version
-- If module issues → `go mod tidy`
-
-**General rule:** Read the full error. Identify the root cause. Fix it. Retry. Only ask if the fix requires a credential, external service, or a business decision.
+**PHP:** `composer install` — read error, fix version constraint
 
 ### 6. Implement
 
-Write the code following the plan and the rules in `CLAUDE.md`.
+Follow the plan. Follow all rules in `CLAUDE.md` and `.claude/rules/`.
 
-- Write the core logic first, then the interface (controller/handler/route), then the tests
+- Core logic first, then interface, then tests
 - Run tests incrementally: `[test command] [specific file]`
-- Fix linter errors inline as you go
+- The `PostToolUse` hook runs linter after every edit — fix offenses as they appear
 
 ### 7. Verify
 
-Full suite must pass before committing:
+Full suite before committing. If it fails: read the error, fix it, retry. Never skip.
 
 ```sh
-[lint command]
-[test command]
+[linter]    # must be clean
+[test suite] # must pass
 ```
 
-If anything fails: read the error, fix it, retry. Do not ask. Do not skip.
+Define the verification upfront in the plan so there's no ambiguity about what "done" means.
 
 ### 8. Commit
 
-Before staging anything, verify no sensitive files are about to be committed:
+Before staging: verify no sensitive files are about to be committed.
 
 ```sh
-git diff --name-only --cached
-git ls-files --others --exclude-standard
+git diff --cached --name-only  # review what's staged
+git status                      # review untracked files
 ```
 
-**Never commit:** `master.key`, `.env`, `*.pem`, `*.key`, `credentials.yml.enc`, `id_rsa`, `id_ed25519`, tokens, passwords, or any file with a secret value.
+**Never commit:** `master.key`, `.env`, `credentials.yml.enc`, `*.pem`, `*.key`, private keys, tokens, passwords.
 
-If a sensitive file appears — add it to `.gitignore`, remove from tracking with `git rm --cached <file>`, then continue.
+If a sensitive file appears — `git rm --cached <file>`, add to `.gitignore`, continue.
 
 ```sh
-git add [specific files — never git add -A without reviewing what's staged]
+git add [specific files — never git add -A without reviewing]
 git commit -m "[type(scope): description]"
 ```
 
@@ -165,7 +163,7 @@ Before opening a PR, review your own changes:
 --- CRITICAL (fix before PR) ---
 --- CONCERN (should fix) ---
 --- NITPICK (optional) ---
---- VERDICT: APPROVED / NEEDS CHANGES ---
+--- VERDICT ---
 ```
 
 Fix any CRITICAL before continuing.
@@ -184,12 +182,12 @@ gh pr create --title "[type]: [description]" --body "$(cat <<'EOF'
 [key decisions]
 
 ## Testing
-[how to verify]
+[how to verify — specific commands or steps]
 
 ## Checklist
 - [ ] Tests pass
 - [ ] Linter clean
-- [ ] No debug code or secrets
+- [ ] No secrets committed
 EOF
 )"
 ```
@@ -197,7 +195,7 @@ EOF
 ### 11. Report
 
 ```
-✅ Branch: chore/base-setup
+✅ Branch: feat/deployment-frequency
 ✅ Commits: 1
 ✅ Tests: 12 examples, 0 failures
 ✅ Linter: clean
