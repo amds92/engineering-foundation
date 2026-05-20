@@ -140,6 +140,21 @@ Based on Thoughtbot's approach:
 
 ---
 
+## Specialized reviewers
+
+`/review` and the self-review step in `/task` use two specialized subagents running in parallel — not a generic checklist.
+
+| Subagent | Model | Scope |
+|----------|-------|-------|
+| `architecture-reviewer` | opus | Separation of concerns, abstractions, duplication, complexity, N+1 queries, test coverage |
+| `security-reviewer` | opus | OWASP: auth/authz, injection, input validation, sensitive data, API security, cryptography |
+
+Both run on every PR. Both report CRITICAL / CONCERN / NITPICK. A CRITICAL from either blocks merge.
+
+These are deployed to `.claude/agents/` by `/init` — they work on any stack.
+
+---
+
 ## Advanced commands
 
 For when you want manual control over individual steps:
@@ -149,7 +164,7 @@ For when you want manual control over individual steps:
 | `/plan` | Architecture planning only |
 | `/branch` | Create branch only |
 | `/commit` | Semantic commit only |
-| `/review` | Code review only |
+| `/review` | Full review (architecture + security in parallel) |
 | `/pr` | Open PR only |
 | `/ci` | Check CI status only |
 
@@ -169,7 +184,7 @@ engineering-foundation/
 │       ├── plan.md        ← advanced
 │       ├── branch.md      ← advanced
 │       ├── commit.md      ← advanced
-│       ├── review.md      ← advanced
+│       ├── review.md      ← advanced (runs architecture + security subagents)
 │       ├── pr.md          ← advanced
 │       └── ci.md          ← advanced
 ├── guides/
@@ -182,6 +197,9 @@ engineering-foundation/
 │   ├── CLAUDE.local.md.template
 │   ├── settings.json.template      ← with PreToolUse + PostToolUse hooks
 │   ├── settings.local.json.template
+│   ├── agents/
+│   │   ├── security-reviewer.md    ← OWASP security review (opus)
+│   │   └── architecture-reviewer.md ← architecture review (opus)
 │   ├── hooks/
 │   │   ├── pre-bash.sh             ← security: blocks secrets before commits
 │   │   └── post-edit.sh            ← quality: lints after every edit

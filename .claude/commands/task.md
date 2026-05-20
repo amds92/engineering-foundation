@@ -151,22 +151,23 @@ Conventional Commits: `feat(metrics): add deployment frequency endpoint`
 
 ### 9. Self-review
 
-Before opening a PR, review your own changes:
+Before opening a PR, run two specialized reviewers in parallel:
 
-- Right abstraction? Logic in the right layer?
-- Duplication? Does similar code already exist?
-- Tests cover success, failure, and edge cases?
-- Security: unvalidated input? exposed sensitive data?
-- Performance: N+1 queries? unbounded results?
+**Subagent 1 — architecture-reviewer**
+Pass the changed files and full diff. Checks: separation of concerns, abstractions, duplication, complexity, naming, error handling, N+1 queries, test coverage.
 
+**Subagent 2 — security-reviewer**
+Pass the changed files and full diff. Checks: auth/authz, injection, input validation, sensitive data, API security, cryptography.
+
+Synthesize into:
 ```
 --- CRITICAL (fix before PR) ---
 --- CONCERN (should fix) ---
 --- NITPICK (optional) ---
---- VERDICT ---
+--- VERDICT: APPROVED / NEEDS CHANGES ---
 ```
 
-Fix any CRITICAL before continuing.
+Fix any CRITICAL before continuing. CONCERN issues go in PR description so the human reviewer sees them.
 
 ### 10. Open PR
 

@@ -179,6 +179,12 @@ Generate from the template. Make executable: `chmod +x .claude/hooks/pre-bash.sh
 **`.claude/hooks/post-edit.sh`** — runs linter after every file edit:
 Generate from the template. Make executable: `chmod +x .claude/hooks/post-edit.sh`
 
+**`.claude/agents/security-reviewer.md`** — OWASP security review subagent:
+Copy from `templates/agents/security-reviewer.md`. No changes needed — it works across all stacks.
+
+**`.claude/agents/architecture-reviewer.md`** — Architecture review subagent:
+Copy from `templates/agents/architecture-reviewer.md`. No changes needed — it works across all stacks.
+
 **`CLAUDE.local.md`** stub (gitignored):
 ```markdown
 # Local overrides — DO NOT COMMIT
@@ -217,6 +223,7 @@ Write all files. Then:
 chmod +x .claude/hooks/pre-bash.sh .claude/hooks/post-edit.sh
 
 git add CLAUDE.md .claude/ specs/ .gitignore
+# .claude/ includes rules/, hooks/, settings.json, output-styles/, and agents/
 git commit -m "chore: add Claude Code engineering environment"
 git push
 ```
@@ -237,6 +244,8 @@ End with:
 ✅ .claude/hooks/pre-bash.sh
 ✅ .claude/hooks/post-edit.sh
 ✅ .claude/output-styles/writing.md
+✅ .claude/agents/security-reviewer.md  (OWASP security review — opus model)
+✅ .claude/agents/architecture-reviewer.md  (architecture review — opus model)
 ✅ CLAUDE.local.md  (gitignored)
 ✅ specs/feature.md.template
 ✅ .gitignore updated

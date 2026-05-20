@@ -1,84 +1,73 @@
+---
+description: Senior-level code review using specialized subagents. Use before opening a PR or when you want a thorough review of changes on the current branch. Runs security and architecture reviewers in parallel.
+disable-model-invocation: true
+---
+
 # Review
 
-Perform a senior-level code review of all changes on the current branch. This is the gate before a PR is opened.
-
-## What a senior engineer looks for
-
-Not just "does it work" — but "is this the right solution, implemented correctly, that won't hurt us in 6 months."
+Senior-level code review before a PR. Two specialized reviewers run in parallel — one focused on security (OWASP), one on architecture. Neither pulls punches.
 
 ## Steps
 
-### 1. Get the diff
+### 1. Get the scope
+
 ```sh
-git diff main...HEAD
+git diff main...HEAD --name-only
+git diff main...HEAD --stat
 ```
-Read every changed file completely — not just the diff, but the surrounding context.
 
-### 2. Check architecture
+Read every changed file completely — not just the diff, but the full file for context.
 
-- **Separation of concerns** — is each class/function doing one thing?
-- **Right abstraction** — is this a service, a job, a concern, a utility? Is it in the right place?
-- **No business logic** in controllers, views, or templates
-- **No duplication** — does similar code already exist elsewhere?
-- **Correct pattern** — does this follow the patterns defined in CLAUDE.md?
+### 2. Run specialized reviewers in parallel
 
-### 3. Check code quality
+Spawn two subagents simultaneously:
 
-- **Naming** — are variables, methods, and classes named clearly? Would a new team member understand?
-- **Complexity** — is this more complex than it needs to be? Can it be simplified?
-- **Magic values** — no hardcoded strings or numbers without explanation
-- **Dead code** — no commented-out code, unused variables, unreachable branches
-- **Error handling** — what happens when things fail? Are errors handled at the right level?
+**Subagent 1 — architecture-reviewer**
+Pass: the list of changed files and the full diff. The agent checks separation of concerns, abstractions, duplication, complexity, naming, error handling, N+1 queries, and test coverage.
 
-### 4. Check tests
+**Subagent 2 — security-reviewer**
+Pass: the list of changed files and the full diff. The agent checks authentication/authorization, injection vectors, input validation, sensitive data exposure, API security, cryptography, and dependencies.
 
-- Every new public method or class has a test
-- Tests cover the happy path AND failure cases
-- No hardcoded external dependencies in unit tests (use doubles/mocks)
-- Tests are readable — they document behaviour, not implementation
-- No tests that test implementation details (test behaviour, not internals)
+Wait for both to complete.
 
-### 5. Check security
+### 3. Synthesize
 
-- No SQL injection risk (parameterized queries, ORM)
-- No user input used unsanitized
-- No secrets or credentials in code
-- Authentication/authorization checked where needed
-- No insecure direct object references
+Merge both reports into a single review. Rules for synthesis:
 
-### 6. Check performance
+- **CRITICAL from either** → CRITICAL in the final report. Must fix before merge.
+- **CONCERN from architecture / HIGH from security** → CONCERN. Should fix.
+- **NITPICK / MEDIUM or lower** → NITPICK. Optional.
+- If both reviewers flag the same issue → group under one finding, note it was flagged twice.
 
-- Any N+1 queries?
-- Any synchronous operations that should be async?
-- Any missing database indexes for new queries?
-- Any large data operations that should be paginated or batched?
-
-## Output format
+### 4. Output
 
 ```
 === CODE REVIEW ===
 
 Branch: [branch name]
 Files changed: [count]
+Reviewed by: architecture-reviewer + security-reviewer
 
 --- CRITICAL (must fix before merge) ---
-[List issues that will cause bugs, security problems, or major regressions]
+[file:line] Issue description
+Why: [why this matters]
+Fix: [specific change]
 
 --- CONCERN (should fix) ---
-[List issues that are wrong but won't break immediately]
+[same format]
 
 --- NITPICK (optional) ---
-[Style improvements, naming suggestions, minor refactors]
+[same format]
 
---- VERDICT ---
-[APPROVED / NEEDS CHANGES]
+--- VERDICT: APPROVED / NEEDS CHANGES ---
 [One sentence summary]
 ```
 
+If nothing critical is found, say so directly. Don't manufacture concerns to look thorough.
+
 ## Rules
 
-- Be specific — point to the exact file and line, not "the service has issues"
-- Explain WHY something is wrong, not just that it's wrong
-- Separate style from logic — linters handle style, you handle logic
-- If something is good, say so — positive feedback is part of review culture
-- Frame suggestions as questions when possible: "What do you think about naming this X?"
+- Point to the exact file and line — never "the service has issues"
+- Explain why something is wrong, not just that it's wrong
+- Separate logic problems from style problems — linters handle style
+- If the code is well-written, say so
