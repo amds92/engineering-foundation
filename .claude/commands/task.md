@@ -133,8 +133,19 @@ If anything fails: read the error, fix it, retry. Do not ask. Do not skip.
 
 ### 8. Commit
 
+Before staging anything, verify no sensitive files are about to be committed:
+
 ```sh
-git add [specific files]
+git diff --name-only --cached
+git ls-files --others --exclude-standard
+```
+
+**Never commit:** `master.key`, `.env`, `*.pem`, `*.key`, `credentials.yml.enc`, `id_rsa`, `id_ed25519`, tokens, passwords, or any file with a secret value.
+
+If a sensitive file appears — add it to `.gitignore`, remove from tracking with `git rm --cached <file>`, then continue.
+
+```sh
+git add [specific files — never git add -A without reviewing what's staged]
 git commit -m "[type(scope): description]"
 ```
 

@@ -231,9 +231,50 @@ grep -q "settings.local.json" .gitignore || echo ".claude/settings.local.json" >
 grep -q "mcp-calls.log" .gitignore || echo ".claude/mcp-calls.log" >> .gitignore
 ```
 
-### 9. Commit and push
+### 9. Security audit before commit
 
-After writing all files, commit and push immediately — the project should never be in a state where the environment is set up locally but not on GitHub.
+Before staging a single file, scan the entire repo for secrets and sensitive files that must never be committed.
+
+**Check and fix `.gitignore` — these must always be present:**
+
+```sh
+# Rails
+grep -q "config/master.key" .gitignore        || echo "config/master.key" >> .gitignore
+grep -q "config/credentials.yml.enc" .gitignore || echo "config/credentials.yml.enc" >> .gitignore
+
+# Environment files
+grep -q ".env" .gitignore     || echo ".env" >> .gitignore
+grep -q ".env.local" .gitignore || echo ".env.local" >> .gitignore
+grep -q ".env.*.local" .gitignore || echo ".env.*.local" >> .gitignore
+
+# Secrets and keys
+grep -q "*.pem" .gitignore    || echo "*.pem" >> .gitignore
+grep -q "*.key" .gitignore    || echo "*.key" >> .gitignore
+grep -q "*.p12" .gitignore    || echo "*.p12" >> .gitignore
+
+# Claude local files
+grep -q "CLAUDE.local.md" .gitignore          || echo "CLAUDE.local.md" >> .gitignore
+grep -q ".claude/settings.local.json" .gitignore || echo ".claude/settings.local.json" >> .gitignore
+grep -q ".claude/mcp-calls.log" .gitignore    || echo ".claude/mcp-calls.log" >> .gitignore
+```
+
+**Check if any sensitive file is already tracked by git:**
+
+```sh
+git ls-files | grep -E "(master\.key|\.env|credentials\.yml\.enc|\.pem|\.p12|id_rsa|id_ed25519)" 
+```
+
+If anything shows up — remove it from tracking immediately before committing:
+
+```sh
+git rm --cached <file>
+```
+
+**Never proceed to commit if sensitive files are tracked.** Fix first, commit after.
+
+### 10. Commit and push
+
+After the security audit passes, commit and push.
 
 ```sh
 git add CLAUDE.md .claude/ specs/ .gitignore
