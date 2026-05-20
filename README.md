@@ -6,6 +6,8 @@ Three commands. Any language. Any stack. Claude works like a senior engineer who
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+**New here? → [Getting Started guide](GETTING_STARTED.md)** — full walkthrough from idea to shipped PR.
+
 ---
 
 ## How it works
